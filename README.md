@@ -26,7 +26,7 @@ To run the project locally, follow these steps:
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/rizkynurarifin/harisenin-frontend-mission.git](https://github.com/rizkynurarifin/harisenin-frontend-mission.git)
+    git clone https://github.com/rizkynurarifin/harisenin-frontend-mission.git
     ```
 2.  **Navigate to the folder:**
     ```bash
@@ -44,8 +44,8 @@ To run the project locally, follow these steps:
 ## 📝 Author
 
 **Rizky Nur Arifin**
-* Fullstack Web Developer & IT Professional
+* Fullstack Web Developer
 * [LinkedIn](https://www.linkedin.com/in/rizkynurarifin/) | [GitHub](https://github.com/rizkynurarifin)
 
 ---
-*Developed as part of the Harisenin Frontend Web Development Bootcamp.*
+*Developed as part of the Harisenin Fullstack Web Development Bootcamp.*

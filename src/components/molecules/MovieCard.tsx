@@ -1,0 +1,125 @@
+import { IoMdPlay, IoMdCheckmark } from 'react-icons/io';
+import { MdOutlineKeyboardArrowDown, MdStar } from 'react-icons/md';
+import type { Movie } from '../../const/movies';
+import { MovieBadge } from '../atoms/MovieBadge';
+
+interface MovieCardProps {
+    movie: Movie;
+    variant?: 'landscape' | 'portrait';
+}
+
+export const MovieCard = ({ movie, variant = 'landscape' }: MovieCardProps) => {
+    const {
+        title, image, imageLandscape, rating, genres, episodes, duration,
+        ageRating, isNewEpisode, isPremium, isTop10
+    } = movie;
+
+    const isLandscape = variant === 'landscape';
+    const previewImage = imageLandscape || image;
+
+    const cardSizeClass = isLandscape
+        ? 'w-full aspect-video'
+        : 'w-full aspect-[2/3] object-cover';
+
+    return (
+        <article className={`relative text-white group z-10 hover:z-50 ${cardSizeClass}`}>
+            <div className='w-full h-full relative'>
+                <img
+                    src={image}
+                    className='object-cover w-full h-full rounded md:rounded-lg'
+                    alt={title}
+                    loading='lazy'
+                />
+
+                {isLandscape && (
+                    <div className="absolute bottom-0 left-0 w-full p-3 md:p-4 flex justify-between items-end bg-linear-to-t from-black/90 to-transparent rounded-b-lg">
+                        <h6 className='text-sm lg:text-lg truncate mr-2 font-semibold'>{title}</h6>
+                        <div className='flex items-center gap-1 shrink-0'>
+                            <MdStar className="text-xs md:text-base" />
+                            <span className='text-xs md:text-sm'>{rating}</span>
+                        </div>
+                    </div>
+                )}
+
+                {/* Badges */}
+                <div className="absolute left-[4.78px] top-[4.78px] sm:left-2.5 sm:top-2.5 flex flex-col gap-[1.91px] sm:gap-1 z-10">
+                    {isPremium && <MovieBadge type="premium" isLandscape={isLandscape} />}
+                    {isNewEpisode && <MovieBadge type="new-episode" isLandscape={isLandscape} />}
+                </div>
+
+                {/* Top 10 Badge */}
+                {isTop10 && <MovieBadge type="top-10" isLandscape={isLandscape} />}
+            </div>
+
+            {/* --- Hover Preview Card --- */}
+            <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 hidden lg:block invisible group-hover:visible opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-300 ease-in-out pointer-events-none group-hover:pointer-events-auto'>
+                <div className='bg-other-page-header rounded-2xl w-87.5 shadow-hover-card flex flex-col overflow-hidden'>
+                    <img
+                        src={previewImage}
+                        className='w-full h-45 object-cover rounded-t-2xl'
+                        alt={title}
+                    />
+                    <div className='flex flex-col justify-between flex-1 lg:gap-4 md:p-7 w-full'>
+                        <div className='flex justify-between items-center'>
+                            <div className='flex lg:gap-4'>
+                                <button className='bg-white rounded-full p-2 cursor-pointer transition-all duration-200 active:scale-95'>
+                                    <IoMdPlay className='text-other-page-header lg:text-2xl' />
+                                </button>
+                                <button className='bg-other-page-header border p-2 rounded-full cursor-pointer transition-all duration-200 active:scale-95'>
+                                    <IoMdCheckmark className='lg:text-2xl' />
+                                </button>
+                            </div>
+                            <button className='bg-other-page-header border p-2 rounded-full cursor-pointer transition-all duration-200 active:scale-95'>
+                                <MdOutlineKeyboardArrowDown className='lg:text-2xl' />
+                            </button>
+                        </div>
+
+                        {isLandscape && (
+                            <div className="flex flex-col gap-3 mt-2">
+                                {episodes && (
+                                    <span className="font-bold lg:text-lg text-white text-left">
+                                        "Episode 1"
+                                    </span>
+                                )}
+
+                                <div className="flex items-center gap-4">
+                                    <div className="flex-1 bg-[#3D3D3D] h-1 rounded-full relative overflow-hidden">
+                                        {/* Indikator progres biru */}
+                                        <div className="bg-blue-500 w-[30%] h-full rounded-full"></div>
+                                    </div>
+                                    <span className="text-secondary text-sm font-semibold whitespace-nowrap">
+                                        {duration || "2j 33m"}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
+                        {!isLandscape && (
+                            <div className='flex items-center justify-start lg:gap-4'>
+                                <span className='bg-[#CDF1FF4D] text-secondary lg:text-lg font-bold lg:py-1 lg:px-3 rounded-3xl'>
+                                    {ageRating}
+                                </span>
+                                <span className='font-bold lg:text-lg'>
+                                    {duration || episodes}
+                                </span>
+                            </div>
+                        )}
+
+                        <ul className='flex items-center gap-2 lg:text-lg text-secondary flex-wrap'>
+                            {genres.map((genre, index) => (
+                                <div key={genre} className="flex items-center gap-2">
+                                    {index !== 0 && (
+                                        <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                                            <circle cx="4.235" cy="4.211" r="4.211" fill="#C1C2C4" />
+                                        </svg>
+                                    )}
+                                    <li>{genre}</li>
+                                </div>
+                            ))}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </article>
+    );
+};
