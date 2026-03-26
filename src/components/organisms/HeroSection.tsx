@@ -4,7 +4,7 @@ import { MdVolumeUp, MdVolumeOff } from "react-icons/md";
 import { genreList } from '../../const/genre';
 import { IoChevronDown } from 'react-icons/io5';
 import { IoMdInformationCircleOutline } from 'react-icons/io';
-import { PopupDetailSeries } from './PopupDetailSeries';
+import { PopupDetail } from './PopupDetail';
 import { Link } from 'react-router-dom';
 
 interface HeroSectionProps {
@@ -103,9 +103,10 @@ export const HeroSection = ({ withGenre }: HeroSectionProps) => {
                 <div className="absolute inset-0 w-[calc(100%+20px)] h-[calc(100%+20px)] bg-linear-to-t from-other-page-header from-10% via-[#101213db] via-60% to-transparent to-100% z-10 pointer-events-none"></div>
             </section>
 
-            <PopupDetailSeries
+            <PopupDetail
                 open={detailSeriesDialog}
                 onOpenChange={setDetailSeriesDialog}
+                isPremium={true}
             />
         </>
     );

@@ -1,4 +1,4 @@
-import { type ReactNode, useState, useRef, useLayoutEffect } from "react"
+import { type ReactNode, useState, useRef, useLayoutEffect } from "react";
 import { CarouselButton } from "../atoms/CarouselButton";
 
 interface MovieCarouselProps {
@@ -6,7 +6,10 @@ interface MovieCarouselProps {
     gapClass?: string;
 }
 
-export const MovieCarousel = ({ children, gapClass = 'lg:gap-7' }: MovieCarouselProps) => {
+export const MovieCarousel = ({
+    children,
+    gapClass = "lg:gap-7",
+}: MovieCarouselProps) => {
     const [translateX, setTranslateX] = useState(0);
     const [isAtEnd, setIsAtEnd] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -16,7 +19,8 @@ export const MovieCarousel = ({ children, gapClass = 'lg:gap-7' }: MovieCarousel
         const container = containerRef.current;
 
         // Gunakan getBoundingClientRect untuk akurasi sub-pixel di mobile
-        const viewPortWidth = container.parentElement?.getBoundingClientRect().width || 0;
+        const viewPortWidth =
+            container.parentElement?.getBoundingClientRect().width || 0;
         const scrollWidth = container.scrollWidth;
 
         // Jika isi carousel lebih kecil dari layar, tidak perlu scroll (maxScroll = 0)
@@ -34,11 +38,11 @@ export const MovieCarousel = ({ children, gapClass = 'lg:gap-7' }: MovieCarousel
 
         updateStatus();
 
-        window.addEventListener('resize', updateStatus);
-        return () => window.removeEventListener('resize', updateStatus);
+        window.addEventListener("resize", updateStatus);
+        return () => window.removeEventListener("resize", updateStatus);
     }, [translateX, children]);
 
-    const handleSlide = (direction: 'right' | 'left') => {
+    const handleSlide = (direction: "right" | "left") => {
         if (containerRef.current) {
             const container = containerRef.current;
             const maxScroll = getPreciseMaxScroll();
@@ -67,8 +71,7 @@ export const MovieCarousel = ({ children, gapClass = 'lg:gap-7' }: MovieCarousel
     };
 
     return (
-        <div className='relative w-full lg:group'>
-
+        <div className="relative w-full lg:group">
             <CarouselButton
                 direction="left"
                 onClick={() => handleSlide("left")}
@@ -80,7 +83,7 @@ export const MovieCarousel = ({ children, gapClass = 'lg:gap-7' }: MovieCarousel
                 isVisible={!isAtEnd}
             />
 
-            <div className="w-full overflow-hidden overflow-x-auto sm:overflow-x-hidden">
+            <div className="w-full overflow-x-auto lg:overflow-visible">
                 <div
                     ref={containerRef}
                     className={`flex ${gapClass} transition-transform duration-500 ease-out`}
@@ -90,5 +93,5 @@ export const MovieCarousel = ({ children, gapClass = 'lg:gap-7' }: MovieCarousel
                 </div>
             </div>
         </div>
-    )
-}
+    );
+};

@@ -4,7 +4,7 @@ interface MovieBadgeProps {
 }
 
 export const MovieBadge = ({ type, isLandscape }: MovieBadgeProps) => {
-    const baseClasses = "flex justify-center items-center border rounded-xl sm:rounded-3xl shadow-md";
+    const baseClasses = "flex justify-center items-center border rounded-xl sm:rounded-3xl shadow-md leading-none";
 
     if (type === 'premium') {
         const size = isLandscape

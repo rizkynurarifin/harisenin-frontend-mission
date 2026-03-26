@@ -4,7 +4,7 @@ import { CONTINUE_WATCHING_MOVIES, NEW_RELEASE_MOVIES, TOP_RATING_MOVIES, TRENDI
 
 const Home = () => {
     return (
-        <div className="pb-10 md:pb-20">
+        <div>
             <HeroSection />
 
             <MovieSection

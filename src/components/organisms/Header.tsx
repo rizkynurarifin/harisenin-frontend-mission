@@ -15,7 +15,7 @@ export const Header = ({ withGenre }: HeaderProps) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     return (
-        <header className='py-4 px-6 md:py-5 md:px-10 lg:px-20 flex justify-between items-center md:gap-12 sticky top-0 w-full z-60 bg-other-page-header'>
+        <header className='py-1.5 px-5 md:py-4 md:px-10 lg:py-6.25 lg:px-20 flex justify-between items-center md:gap-12 sticky top-0 w-full z-60 bg-other-page-header'>
             <div className='flex gap-3 lg:gap-20 items-center'>
                 <Link to='/' className='flex items-center gap-2 text-white'>
                     <img

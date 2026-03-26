@@ -10,7 +10,7 @@ export const Footer = () => {
     const [isHelpOpen, setIsHelpOpen] = useState(false);
 
     return (
-        <footer className='flex flex-col lg:flex-row lg:justify-between p-5 md:p-10 lg:px-20 border-t border-[#E7E3FC3B]'>
+        <footer className='flex flex-col lg:flex-row lg:justify-between p-5 md:p-10 lg:py-15 lg:px-20 border-t border-[#E7E3FC3B]'>
             <div className='flex flex-col gap-5 md:gap-6 mb-10'>
                 <Link to='/' className='flex items-center gap-2 text-white'>
                     <img
