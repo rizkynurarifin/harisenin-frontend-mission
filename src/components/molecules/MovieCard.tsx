@@ -2,6 +2,7 @@ import { IoMdPlay, IoMdCheckmark } from 'react-icons/io';
 import { MdOutlineKeyboardArrowDown, MdStar } from 'react-icons/md';
 import type { Movie } from '../../const/movies';
 import { MovieBadge } from '../atoms/MovieBadge';
+import React from 'react';
 
 interface MovieCardProps {
     movie: Movie;
@@ -10,12 +11,37 @@ interface MovieCardProps {
 
 export const MovieCard = ({ movie, variant = 'landscape' }: MovieCardProps) => {
     const {
-        title, image, imageLandscape, rating, genres, episodes, duration,
-        ageRating, isNewEpisode, isPremium, isTop10
+        type,
+        title,
+        thumbnail,
+        thumbnailLandscape,
+        rating,
+        ageRating,
+        totalEpisodes,
+        duration,
+        genres,
+        isNewEpisode,
+        isPremium,
+        isTop10,
+        progress: movieProgress
     } = movie;
 
     const isLandscape = variant === 'landscape';
-    const previewImage = imageLandscape || image;
+    const previewImage = thumbnailLandscape || thumbnail;
+
+    const currentEpisode = movie.type === 'series'
+        ? (movie.episodes.find(ep => ep.id === movie.lastWatchedEpisodeId) || movie.episodes[0])
+        : null;
+
+    const displayTitle = type === 'series' ? currentEpisode?.title : "";
+
+    const displayProgress = type === 'series'
+        ? (currentEpisode?.progress || 0)
+        : (movieProgress || 0);
+
+    const displayDuration = type === 'series'
+        ? (currentEpisode?.duration || "0 min")
+        : (duration || "0 min");
 
     const cardSizeClass = isLandscape
         ? 'w-full aspect-video'
@@ -25,12 +51,13 @@ export const MovieCard = ({ movie, variant = 'landscape' }: MovieCardProps) => {
         <article className={`relative text-white group z-10 hover:z-50 ${cardSizeClass}`}>
             <div className='w-full h-full relative'>
                 <img
-                    src={image}
+                    src={isLandscape ? (thumbnailLandscape || thumbnail) : thumbnail}
                     className='object-cover w-full h-full rounded md:rounded-lg'
                     alt={title}
                     loading='lazy'
                 />
 
+                {/* Judul & Rating di main card */}
                 {isLandscape && (
                     <div className="absolute bottom-0 left-0 w-full p-3 md:p-4 flex justify-between items-end bg-linear-to-t from-black/90 to-transparent rounded-b-lg">
                         <h6 className='text-sm lg:text-lg truncate mr-2 font-semibold'>{title}</h6>
@@ -74,47 +101,54 @@ export const MovieCard = ({ movie, variant = 'landscape' }: MovieCardProps) => {
                             </button>
                         </div>
 
-                        {isLandscape && (
+                        {/* Progress Section */}
+                        {(displayProgress > 0) && isLandscape && (
                             <div className="flex flex-col gap-3 mt-2">
-                                {episodes && (
-                                    <span className="font-bold lg:text-lg text-white text-left">
-                                        "Episode 1"
+                                {type === 'series' && (
+                                    <span className="font-bold lg:text-lg text-white text-left truncate">
+                                        {displayTitle}
                                     </span>
                                 )}
 
                                 <div className="flex items-center gap-4">
                                     <div className="flex-1 bg-[#3D3D3D] h-1 rounded-full relative overflow-hidden">
-                                        {/* Indikator progres biru */}
-                                        <div className="bg-blue-500 w-[30%] h-full rounded-full"></div>
+                                        <div
+                                            className="bg-blue-500 h-full rounded-full transition-all duration-500"
+                                            style={{ width: `${displayProgress}%` }}
+                                        ></div>
                                     </div>
-                                    <span className="text-secondary text-sm font-semibold whitespace-nowrap">
-                                        {duration || "2j 33m"}
+                                    <span className="text-secondary text-sm whitespace-nowrap">
+                                        {displayDuration}
                                     </span>
                                 </div>
                             </div>
                         )}
 
+                        {/* Metadata untuk Portrait (Non-Landscape) */}
                         {!isLandscape && (
                             <div className='flex items-center justify-start lg:gap-4'>
-                                <span className='bg-[#CDF1FF4D] text-secondary lg:text-lg font-bold lg:py-1 lg:px-3 rounded-3xl'>
+                                <span className='bg-[#CDF1FF4D] text-secondary lg:text-lg font-bold lg:py-1 lg:px-3 px-2 rounded-3xl'>
                                     {ageRating}
                                 </span>
-                                <span className='font-bold lg:text-lg'>
-                                    {duration || episodes}
+                                <span className='font-bold lg:text-lg text-white'>
+                                    {type === 'series' ? `${totalEpisodes} Episode` : duration}
                                 </span>
                             </div>
                         )}
 
-                        <ul className='flex items-center gap-2 lg:text-lg text-secondary flex-wrap'>
+                        {/* Genres */}
+                        <ul className='flex items-center justify-between w-full lg:text-lg text-secondary'>
                             {genres.map((genre, index) => (
-                                <div key={genre} className="flex items-center gap-2">
+                                <React.Fragment key={genre}>
                                     {index !== 0 && (
-                                        <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-                                            <circle cx="4.235" cy="4.211" r="4.211" fill="#C1C2C4" />
-                                        </svg>
+                                        <div className="flex items-center justify-center">
+                                            <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+                                                <circle cx="4.235" cy="4.211" r="4.211" fill="#C1C2C4" />
+                                            </svg>
+                                        </div>
                                     )}
-                                    <li>{genre}</li>
-                                </div>
+                                    <li className="list-none whitespace-nowrap">{genre}</li>
+                                </React.Fragment>
                             ))}
                         </ul>
                     </div>

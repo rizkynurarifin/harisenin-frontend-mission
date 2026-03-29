@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { MdVolumeUp, MdVolumeOff } from "react-icons/md";
 import { genreList } from '../../const/genre';
+import { NEW_RELEASE_MOVIES, NEW_RELEASE_SERIES } from '../../const/movies';
 import { IoChevronDown } from 'react-icons/io5';
 import { IoMdInformationCircleOutline } from 'react-icons/io';
 import { PopupDetail } from './PopupDetail';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 interface HeroSectionProps {
     withGenre?: boolean;
@@ -14,22 +15,36 @@ interface HeroSectionProps {
 export const HeroSection = ({ withGenre }: HeroSectionProps) => {
     const [mutedVideo, setMutedVideo] = useState(true);
     const [detailSeriesDialog, setDetailSeriesDialog] = useState(false);
+    
+    const location = useLocation();
+    const pathname = location.pathname.toLowerCase();
+
+    const heroData = useMemo(() => {
+        if (pathname.includes('series')) {
+            return NEW_RELEASE_SERIES.find(s => s.id === 12) || NEW_RELEASE_SERIES[0];
+        } else if (pathname.includes('movies')) {
+            return NEW_RELEASE_MOVIES.find(m => m.id === 1) || NEW_RELEASE_MOVIES[0];
+        }
+
+        return NEW_RELEASE_SERIES[0];
+    }, [pathname]);
 
     return (
         <>
             <section className='relative w-full h-75 md:h-100 lg:h-146.75 flex flex-col justify-end text-white overflow-hidden'>
                 {/* Video Background */}
                 <video
+                    key={heroData.trailerUrl}
                     className='absolute top-0 left-0 w-full h-full object-cover z-0'
                     autoPlay
                     loop
                     muted={mutedVideo}
                     playsInline
                 >
-                    <source src="/trailer.mp4" type="video/mp4" />
+                    <source src={heroData.trailerUrl || "/trailer.mp4"} type="video/mp4" />
                 </video>
 
-                <div className='absolute z-20 w-full bottom-5 md:bottom-10 lg:bottom-14 left-0 px-6 md:px-10 lg:px-14 flex flex-col gap-5 lg:gap-10'>
+                <div className='absolute z-20 w-full bottom-5 md:bottom-10 lg:bottom-14 left-0 px-6 md:px-10 lg:px-20 flex flex-col gap-3 lg:gap-10'>
                     {/* Genre Selector */}
                     {withGenre && (
                         <div>
@@ -61,13 +76,13 @@ export const HeroSection = ({ withGenre }: HeroSectionProps) => {
                         </div>
                     )}
 
-                    {/* Content Info */}
+                    {/* Content Info Dinamis */}
                     <div className='flex flex-col items-start gap-3 lg:gap-5 md:max-w-125 lg:max-w-167'>
                         <h1 className='text-2xl md:text-4xl lg:text-5xl font-bold'>
-                            Duty After School
+                            {heroData.title}
                         </h1>
                         <p className='text-xs md:text-lg line-clamp-2 lg:line-clamp-none font-medium'>
-                            Sebuah benda tak dikenal mengambil alih dunia. Dalam keputusasaan, Departemen Pertahanan mulai merekrut lebih banyak tentara, termasuk siswa sekolah menengah. Mereka pun segera menjadi pejuang garis depan dalam perang.
+                            {heroData.description}
                         </p>
                     </div>
 
@@ -104,9 +119,9 @@ export const HeroSection = ({ withGenre }: HeroSectionProps) => {
             </section>
 
             <PopupDetail
+                movie={heroData}
                 open={detailSeriesDialog}
                 onOpenChange={setDetailSeriesDialog}
-                isPremium={true}
             />
         </>
     );

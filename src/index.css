@@ -1,6 +1,17 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Menghilangkan scrollbar di Chrome, Safari, dan Opera */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+/* Menghilangkan scrollbar di IE, Edge, dan Firefox */
+.scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
 @theme inline {
   /* Font Family */
   --font-lato: "Lato", sans-serif;

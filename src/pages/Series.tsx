@@ -1,6 +1,6 @@
 import { HeroSection } from "../components/organisms/HeroSection";
 import { MovieSection } from "../components/templates/MovieSection";
-import { CHILL_EXCLUSIVE_MOVIES, CONTINUE_WATCHING_SERIES, NEW_RELEASE_MOVIES, TOP_RATING_MOVIES, TRENDING_MOVIES } from "../const/movies";
+import { CHILL_EXCLUSIVE_SERIES, CONTINUE_WATCHING_SERIES, NEW_RELEASE_SERIES, TOP_RATING_SERIES, TRENDING_SERIES } from "../const/movies";
 
 const Series = () => {
     return (
@@ -16,25 +16,25 @@ const Series = () => {
 
             <MovieSection
                 title="Series Persembahan Chill" 
-                movies={CHILL_EXCLUSIVE_MOVIES} 
+                movies={CHILL_EXCLUSIVE_SERIES} 
                 variant="portrait"
             />
 
             <MovieSection 
                 title="Top Rating Series Hari ini" 
-                movies={TOP_RATING_MOVIES} 
+                movies={TOP_RATING_SERIES} 
                 variant="portrait"
             />
 
             <MovieSection 
                 title="Series Trending" 
-                movies={TRENDING_MOVIES} 
+                movies={TRENDING_SERIES} 
                 variant="portrait"
             />
 
             <MovieSection 
                 title="Rilis Baru" 
-                movies={NEW_RELEASE_MOVIES} 
+                movies={NEW_RELEASE_SERIES} 
                 variant="portrait"
             />
         </div>

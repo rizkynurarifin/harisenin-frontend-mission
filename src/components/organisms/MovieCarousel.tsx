@@ -4,9 +4,11 @@ import { CarouselButton } from "../atoms/CarouselButton";
 interface MovieCarouselProps {
     children: ReactNode;
     gapClass?: string;
+    variant?: "landscape" | "portrait";
 }
 
 export const MovieCarousel = ({
+    variant,
     children,
     gapClass = "lg:gap-7",
 }: MovieCarouselProps) => {
@@ -21,7 +23,8 @@ export const MovieCarousel = ({
         // Gunakan getBoundingClientRect untuk akurasi sub-pixel di mobile
         const viewPortWidth =
             container.parentElement?.getBoundingClientRect().width || 0;
-        const scrollWidth = container.scrollWidth;
+        const scrollWidth =
+            container.scrollWidth - (variant === "landscape" ? 15 : 50);
 
         // Jika isi carousel lebih kecil dari layar, tidak perlu scroll (maxScroll = 0)
         if (scrollWidth <= viewPortWidth) return 0;
