@@ -82,7 +82,7 @@ export const Header = ({ withGenre }: HeaderProps) => {
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
                 <img
-                    src='src\assets\profile.png'
+                    src='src\assets\my-profile.jpeg'
                     className='w-6 md:w-10 rounded-full'
                     alt='avatar profile'
                 />

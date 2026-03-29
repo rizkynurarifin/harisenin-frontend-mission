@@ -4,7 +4,7 @@ import { CHILL_EXCLUSIVE_MOVIES, CONTINUE_WATCHING_MOVIES, NEW_RELEASE_MOVIES, T
 
 const Movies = () => {
     return (
-        <div className="pb-10 md:pb-20">
+        <main>
             <HeroSection withGenre />
 
             <MovieSection
@@ -37,7 +37,7 @@ const Movies = () => {
                 movies={NEW_RELEASE_MOVIES}
                 variant="portrait"
             />
-        </div>
+        </main>
     );
 };
 

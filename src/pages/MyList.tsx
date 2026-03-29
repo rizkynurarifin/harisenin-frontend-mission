@@ -3,14 +3,14 @@ import { MY_LIST } from "../const/movies";
 
 const MyList = () => {
     return (
-        <div className="pb-10 md:pb-20">
+        <main>
             <MovieSection
                 title="Daftar Saya"
                 movies={MY_LIST}
                 variant="portrait"
                 isGrid={true}
             />
-        </div>
+        </main>
     );
 };
 

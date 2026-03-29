@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import Series from './pages/Series';
 import Movies from './pages/Movies';
 import MyList from './pages/MyList';
+import Profile from './pages/Profile';
 
 const router = createBrowserRouter([
     {
@@ -25,6 +26,10 @@ const router = createBrowserRouter([
             {
                 path: "my-list",
                 element: <MyList />,
+            },
+            {
+                path: "profile",
+                element: <Profile />,
             },
         ],
     },

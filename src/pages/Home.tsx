@@ -4,7 +4,7 @@ import { CONTINUE_WATCHING, NEW_RELEASE, TOP_RATING, TRENDING } from "../const/m
 
 const Home = () => {
     return (
-        <div>
+        <main>
             <HeroSection />
 
             <MovieSection
@@ -31,7 +31,7 @@ const Home = () => {
                 movies={NEW_RELEASE} 
                 variant="portrait"
             />
-        </div>
+        </main>
     );
 };
 
