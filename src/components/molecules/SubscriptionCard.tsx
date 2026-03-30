@@ -33,7 +33,7 @@ export const SubscriptionCard = ({ isPremium, expiryDate }: SubscriptionCardProp
                     <p className="text-white text-sm lg:text-lg">Dapatkan Akses Tak Terbatas ke Ribuan Film dan Series Kesukaan Kamu!</p>
                 </div>
             </div>
-            <Button to="/billing" variant="dark">
+            <Button to="/subscription" variant="dark">
                 Mulai Berlangganan
             </Button>
         </article>

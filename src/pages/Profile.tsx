@@ -6,7 +6,7 @@ import { MovieSection } from "../components/templates/MovieSection";
 import { MY_LIST } from "../const/movies";
 
 const Profile = () => {
-    const isPremiumUser = true;
+    const isPremiumUser = false;
 
     return (
         <main>
