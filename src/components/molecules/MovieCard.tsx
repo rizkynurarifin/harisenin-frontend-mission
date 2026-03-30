@@ -3,6 +3,7 @@ import { MdOutlineKeyboardArrowDown, MdStar } from 'react-icons/md';
 import type { Movie } from '../../const/movies';
 import { MovieBadge } from '../atoms/MovieBadge';
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface MovieCardProps {
     movie: Movie;
@@ -25,6 +26,8 @@ export const MovieCard = ({ movie, variant = 'landscape' }: MovieCardProps) => {
         isTop10,
         progress: movieProgress
     } = movie;
+
+    const navigate = useNavigate();
 
     const isLandscape = variant === 'landscape';
     const previewImage = thumbnailLandscape || thumbnail;
@@ -89,7 +92,10 @@ export const MovieCard = ({ movie, variant = 'landscape' }: MovieCardProps) => {
                     <div className='flex flex-col justify-between flex-1 lg:gap-4 md:p-7 w-full'>
                         <div className='flex justify-between items-center'>
                             <div className='flex lg:gap-4'>
-                                <button className='bg-white rounded-full p-2 cursor-pointer transition-all duration-200 active:scale-95'>
+                                <button
+                                    onClick={() => navigate(`/movie-player/${movie.id}`)}
+                                    className='bg-white rounded-full p-2 cursor-pointer transition-all duration-200 active:scale-95'
+                                >
                                     <IoMdPlay className='text-other-page-header lg:text-2xl' />
                                 </button>
                                 <button className='bg-other-page-header border p-2 rounded-full cursor-pointer transition-all duration-200 active:scale-95'>

@@ -6,6 +6,7 @@ import Movies from './pages/Movies';
 import MyList from './pages/MyList';
 import Profile from './pages/Profile';
 import Subscription from './pages/Subscription';
+import { MoviePlayer } from './pages/MoviePlayer';
 
 const router = createBrowserRouter([
     {
@@ -37,6 +38,10 @@ const router = createBrowserRouter([
                 element: <Subscription />,
             },
         ],
+    },
+    {
+        path: "movie-player/:id",
+        element: <MoviePlayer />,
     },
 ]);
 
