@@ -2,13 +2,17 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ALL_CONTENT } from '../const/movies';
 import { VideoControllerBar } from '../components/organisms/VideoControllerBar';
 import { useRef, useState } from 'react';
+import { PremiumOverlay } from '../components/organisms/PremiumOverlay';
 
 export const MoviePlayer = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isPlaying, setIsPlaying] = useState(true);
-    
+
+    // Simulasi status user (biasanya dari Auth Context)
+    const [isUserPremium] = useState(false);
+
     const movie = ALL_CONTENT[Number(id)];
 
     if (!movie) {
@@ -24,11 +28,14 @@ export const MoviePlayer = () => {
             </div>
         );
     }
-
+    
+    const isPremiumOnly = movie.isPremium && !isUserPremium;
     const episodesData = movie.type === 'series' ? movie.episodes : [];
     const hasTrailer = !!movie.trailerUrl;
 
     const togglePlay = () => {
+        if (isPremiumOnly) return;
+
         if (videoRef.current) {
             if (isPlaying) {
                 videoRef.current.pause();
@@ -41,29 +48,35 @@ export const MoviePlayer = () => {
 
     return (
         <div className="min-h-dvh w-full relative">
-            {hasTrailer ? (
-                <video
-                    ref={videoRef}
-                    src={movie.trailerUrl}
-                    className="absolute w-full h-full object-cover z-0"
-                    autoPlay
-                    loop
-                    playsInline
-                    onClick={togglePlay}
-                />
-            ) : (
-                <img
-                    src={movie.thumbnailLandscape}
-                    alt={movie.title}
-                    className="absolute w-full h-full object-cover z-0"
-                />
-            )}
+            {/* 1. Overlay Premium */}
+            {isPremiumOnly && <PremiumOverlay />}
 
-            {/* Tombol Back (Opsional tapi disarankan untuk player full screen) */}
+            {/* 2. Media Layer */}
+            <div className={`absolute inset-0 z-0 transition-all duration-700 ${isPremiumOnly ? 'blur-md brightness-50' : ''}`}>
+                {hasTrailer ? (
+                    <video
+                        ref={videoRef}
+                        src={movie.trailerUrl}
+                        className="w-full h-full object-cover"
+                        autoPlay={!isPremiumOnly}
+                        loop
+                        playsInline
+                        onClick={togglePlay}
+                    />
+                ) : (
+                    <img
+                        src={movie.thumbnailLandscape}
+                        alt={movie.title}
+                        className="w-full h-full object-cover"
+                    />
+                )}
+            </div>
+
+            {/* 3. Tombol Back */}
             <button
                 type="button"
                 onClick={() => navigate(-1)}
-                className="absolute top-5 left-5 z-20 text-white flex items-center gap-2 hover:text-primary transition-all active:scale-95"
+                className="absolute top-5 left-5 z-50 text-white flex items-center gap-2 hover:text-primary transition-all active:scale-95"
             >
                 <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -71,8 +84,8 @@ export const MoviePlayer = () => {
                 <span className="font-semibold">Kembali</span>
             </button>
 
-            {/* Kontrol Tengah: Hanya muncul jika ada video dan sedang pause */}
-            {hasTrailer && !isPlaying && (
+            {/* 4. Tombol Play/Pause */}
+            {hasTrailer && !isPlaying && !isPremiumOnly && (
                 <div
                     className="absolute inset-0 flex items-center justify-center z-10 cursor-pointer"
                     onClick={togglePlay}
@@ -84,10 +97,12 @@ export const MoviePlayer = () => {
                 </div>
             )}
 
+            {/* 5. Controller Bar */}
             <VideoControllerBar
                 title={movie.title}
                 type={movie.type}
                 episodes={episodesData}
+                isDisabled={isPremiumOnly}
             />
         </div>
     );
