@@ -7,6 +7,8 @@ import MyList from './pages/MyList';
 import Profile from './pages/Profile';
 import Subscription from './pages/Subscription';
 import { MoviePlayer } from './pages/MoviePlayer';
+import { Login } from './pages/Login';
+import { Register } from './pages/Register';
 
 const router = createBrowserRouter([
     {
@@ -38,6 +40,14 @@ const router = createBrowserRouter([
                 element: <Subscription />,
             },
         ],
+    },
+    {
+        path: "login",
+        element: <Login />,
+    },
+    {
+        path: "register",
+        element: <Register />,
     },
     {
         path: "movie-player/:id",
