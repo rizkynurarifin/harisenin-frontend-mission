@@ -35,7 +35,10 @@ export const PricingCard = ({ title, price, accounts, features }: PricingCardPro
             <hr className="w-full border-[#e7e3fc3b]" />
 
             <div className="flex flex-col items-center gap-1">
-                <Button className="w-full bg-white text-primary-300! hover:bg-white/90 py-2.5">
+                <Button
+                    to="/payment"
+                    className="w-full bg-white text-primary-300! hover:bg-white/90 py-2.5"
+                >
                     Langganan
                 </Button>
                 <span className="text-white text-xs">

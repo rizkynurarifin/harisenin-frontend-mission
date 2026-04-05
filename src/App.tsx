@@ -9,6 +9,8 @@ import Subscription from './pages/Subscription';
 import { MoviePlayer } from './pages/MoviePlayer';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { Payment } from './pages/Payment';
+import { PaymentDetail } from './pages/PaymentDetail';
 
 const router = createBrowserRouter([
     {
@@ -38,6 +40,14 @@ const router = createBrowserRouter([
             {
                 path: "subscription",
                 element: <Subscription />,
+            },
+            {
+                path: "payment",
+                element: <Payment />,
+            },
+            {
+                path: "payment-detail",
+                element: <PaymentDetail />,
             },
         ],
     },
