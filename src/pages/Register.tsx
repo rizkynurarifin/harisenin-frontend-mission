@@ -48,7 +48,8 @@ export const Register = () => {
             email,
             password,
             role: 'user',
-            isPremium: false
+            isPremium: false,
+            myList: []
         });
         
         alert("Berhasil mendaftar! Silakan masuk.");

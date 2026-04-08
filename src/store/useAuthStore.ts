@@ -16,6 +16,7 @@ interface UserData {
     avatar?: string;
     role: 'user' | 'admin';
     isPremium: boolean;
+    myList: number[];
 }
 
 interface AuthStore {
@@ -31,6 +32,8 @@ interface AuthStore {
     updateProfile: (updatedData: Partial<UserData>) => void;
     setPremium: (status: boolean) => void;
     setSelectedPlan: (plan: Plan | null) => void;
+    addToMyList: (movieId: number) => void;
+    removeFromMyList: (movieId: number) => void;
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -47,6 +50,7 @@ export const useAuthStore = create<AuthStore>()(
                     role: 'admin',
                     avatar: '/src/assets/my-profile.jpeg',
                     isPremium: true,
+                    myList: [1, 2, 3],
                 }
             ],
 
@@ -58,12 +62,13 @@ export const useAuthStore = create<AuthStore>()(
                 );
 
                 if (!isExist) {
-                    const userWithAvatar = {
+                    const userWithDefaults = {
                         ...newUser,
                         isPremium: false,
+                        myList: [],
                         avatar: newUser.avatar || '/src/assets/profile.png'
                     };
-                    set({ registeredUsers: [...registeredUsers, userWithAvatar] });
+                    set({ registeredUsers: [...registeredUsers, userWithDefaults] });
                 }
             },
 
@@ -112,6 +117,35 @@ export const useAuthStore = create<AuthStore>()(
 
             // Fungsi Logout
             logout: () => set({ user: null, isLoggedIn: false }),
+
+            // Logika menambahkan film ke daftar
+            addToMyList: (movieId) => {
+                const { user, registeredUsers } = get();
+                if (!user || user.myList.includes(movieId)) return;
+
+                const updatedUser = { ...user, myList: [...user.myList, movieId] };
+                const updatedList = registeredUsers.map((u) =>
+                    u.email === user.email ? updatedUser : u
+                );
+
+                set({ user: updatedUser, registeredUsers: updatedList });
+            },
+
+            // Logika menghapus film dari daftar
+            removeFromMyList: (movieId) => {
+                const { user, registeredUsers } = get();
+                if (!user) return;
+
+                const updatedUser = {
+                    ...user,
+                    myList: user.myList.filter(id => id !== movieId)
+                };
+                const updatedList = registeredUsers.map((u) =>
+                    u.email === user.email ? updatedUser : u
+                );
+
+                set({ user: updatedUser, registeredUsers: updatedList });
+            },
         }),
         {
             name: 'chill-auth-storage',

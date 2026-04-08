@@ -30,10 +30,12 @@ export const MovieSection = ({
                 {title}
             </h3>
 
-            {isGrid ? (
-                <div
-                    className={`grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 ${carouselGap} w-full`}
-                >
+            {movies.length === 0 ? (
+                <div className="w-full py-10 text-center border border-dashed border-gray-600 rounded-lg text-secondary">
+                    Belum ada film di daftar kamu.
+                </div>
+            ) : isGrid ? (
+                <div className={`grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 ${carouselGap} w-full`}>
                     {movies.map((movie) => (
                         <MovieCard key={movie.id} movie={movie} variant={variant} />
                     ))}

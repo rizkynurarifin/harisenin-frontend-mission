@@ -3,15 +3,14 @@ import { ALL_CONTENT } from '../const/movies';
 import { VideoControllerBar } from '../components/organisms/VideoControllerBar';
 import { useRef, useState } from 'react';
 import { PremiumOverlay } from '../components/organisms/PremiumOverlay';
+import { useAuthStore } from '../store/useAuthStore';
 
 export const MoviePlayer = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isPlaying, setIsPlaying] = useState(true);
-
-    // Simulasi status user (biasanya dari Auth Context)
-    const [isUserPremium] = useState(false);
+    const isUserPremium = useAuthStore((state) => state.user?.isPremium ?? false);
 
     const movie = ALL_CONTENT[Number(id)];
 

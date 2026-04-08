@@ -4,11 +4,18 @@ import { InputInsetLabel } from "../components/atoms/InputInsetLabel";
 import { ProfileHeader } from "../components/molecules/ProfileHeader";
 import { SubscriptionCard } from "../components/molecules/SubscriptionCard";
 import { MovieSection } from "../components/templates/MovieSection";
-import { MY_LIST } from "../const/movies";
+import { ALL_CONTENT } from "../const/movies";
 import { useAuthStore } from "../store/useAuthStore";
 
 const Profile = () => {
     const { user, updateProfile } = useAuthStore();
+
+    const myMovies = user?.myList
+        ? [...user.myList]
+            .reverse()
+            .map((id) => ALL_CONTENT[id])
+            .filter((movie) => movie !== undefined)
+        : [];
 
     const [formData, setFormData] = useState({
         username: user?.username || "",
@@ -97,7 +104,7 @@ const Profile = () => {
 
             <MovieSection
                 title="Daftar Saya"
-                movies={MY_LIST}
+                movies={myMovies}
                 variant="portrait"
                 isGrid={true}
                 className="-mt-5 lg:-mt-10"

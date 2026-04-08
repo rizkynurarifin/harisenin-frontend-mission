@@ -1,9 +1,10 @@
-import { IoMdPlay, IoMdCheckmark } from 'react-icons/io';
+import { IoMdPlay, IoMdCheckmark, IoMdAdd } from 'react-icons/io';
 import { MdOutlineKeyboardArrowDown, MdStar } from 'react-icons/md';
 import type { Movie } from '../../const/movies';
 import { MovieBadge } from '../atoms/MovieBadge';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../store/useAuthStore';
 
 interface MovieCardProps {
     movie: Movie;
@@ -12,6 +13,7 @@ interface MovieCardProps {
 
 export const MovieCard = ({ movie, variant = 'landscape' }: MovieCardProps) => {
     const {
+        id,
         type,
         title,
         thumbnail,
@@ -28,6 +30,13 @@ export const MovieCard = ({ movie, variant = 'landscape' }: MovieCardProps) => {
     } = movie;
 
     const navigate = useNavigate();
+    
+    const user = useAuthStore((state) => state.user);
+    const addToMyList = useAuthStore((state) => state.addToMyList);
+    const removeFromMyList = useAuthStore((state) => state.removeFromMyList);
+
+    // Cek apakah film ini sudah ada di daftar user
+    const isInMyList = user?.myList?.includes(id) ?? false;
 
     const isLandscape = variant === 'landscape';
     const previewImage = thumbnailLandscape || thumbnail;
@@ -45,6 +54,21 @@ export const MovieCard = ({ movie, variant = 'landscape' }: MovieCardProps) => {
     const displayDuration = type === 'series'
         ? (currentEpisode?.duration || "0 min")
         : (duration || "0 min");
+
+    // Fungsi Handle Daftar Saya
+    const handleMyListToggle = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!user) {
+            alert("Silakan login terlebih dahulu untuk menambah ke Daftar Saya!");
+            return;
+        }
+
+        if (isInMyList) {
+            removeFromMyList(id);
+        } else {
+            addToMyList(id);
+        }
+    };
 
     const cardSizeClass = isLandscape
         ? 'w-full aspect-video'
@@ -98,8 +122,21 @@ export const MovieCard = ({ movie, variant = 'landscape' }: MovieCardProps) => {
                                 >
                                     <IoMdPlay className='text-other-page-header lg:text-2xl' />
                                 </button>
-                                <button className='bg-other-page-header border p-2 rounded-full cursor-pointer transition-all duration-200 active:scale-95'>
+                                {/* <button className='bg-other-page-header border p-2 rounded-full cursor-pointer transition-all duration-200 active:scale-95'>
                                     <IoMdCheckmark className='lg:text-2xl' />
+                                </button> */}
+
+                                {/* Tombol Daftar Saya Dinamis */}
+                                <button
+                                    onClick={handleMyListToggle}
+                                    className={`bg-other-page-header border p-2 rounded-full cursor-pointer transition-all duration-200 active:scale-95 ${isInMyList ? 'border-primary text-primary' : 'border-white text-white'
+                                        }`}
+                                >
+                                    {isInMyList ? (
+                                        <IoMdCheckmark className='lg:text-2xl' />
+                                    ) : (
+                                        <IoMdAdd className='lg:text-2xl' />
+                                    )}
                                 </button>
                             </div>
                             <button className='bg-other-page-header border p-2 rounded-full cursor-pointer transition-all duration-200 active:scale-95'>
