@@ -27,14 +27,14 @@ interface CommonMetadata {
     isTop10?: boolean;
 }
 
-interface MovieType extends CommonMetadata {
+export interface MovieType extends CommonMetadata {
     type: 'movie';
     duration: string;
     totalEpisodes?: never;
     episodes?: never;
 }
 
-interface SeriesType extends CommonMetadata {
+export interface SeriesType extends CommonMetadata {
     type: 'series';
     totalEpisodes: number;
     episodes: EpisodeDetail[];

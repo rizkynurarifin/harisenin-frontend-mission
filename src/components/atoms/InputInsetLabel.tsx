@@ -6,7 +6,7 @@ interface InputInsetLabelProps extends React.InputHTMLAttributes<HTMLInputElemen
     hasEdit?: boolean;
 }
 
-export const InputInsetLabel = ({ label, hasEdit, ...props }: InputInsetLabelProps) => {
+export const InputInsetLabel = ({ label, hasEdit, id, ...props }: InputInsetLabelProps) => {
     const inputRef = useRef<HTMLInputElement>(null);
 
     return (
@@ -19,6 +19,7 @@ export const InputInsetLabel = ({ label, hasEdit, ...props }: InputInsetLabelPro
 
                 {/* Input Field */}
                 <input
+                    id={id}
                     ref={inputRef}
                     className="block w-full text-white font-medium text-base lg:text-lg bg-transparent border-0 p-0 focus:ring-0 focus:outline-none"
                     {...props}

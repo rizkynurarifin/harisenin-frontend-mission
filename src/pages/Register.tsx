@@ -1,10 +1,60 @@
-// src/pages/Register.tsx
 import { FcGoogle } from "react-icons/fc";
 import { Button } from "../components/atoms/Button";
 import { InputField } from "../components/atoms/InputField";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useAuthStore } from "../store/useAuthStore";
 
 export const Register = () => {
+    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [error, setError] = useState("");
+
+    const navigate = useNavigate();
+    const register = useAuthStore((state) => state.register);
+
+    const handleRegister = (e: React.FormEvent) => {
+        e.preventDefault();
+        setError("");
+
+        // 1. Validasi Kosong
+        if (!username || !email || !password || !confirmPassword) {
+            setError("Semua field wajib diisi");
+            return;
+        }
+
+        // 2. Validasi Format Email Sederhana
+        if (!email.includes("@")) {
+            setError("Format email tidak valid");
+            return;
+        }
+
+        // 3. Validasi Panjang Password
+        if (password.length < 8) {
+            setError("Kata sandi minimal 8 karakter");
+            return;
+        }
+
+        // 4. Validasi Kecocokan Password
+        if (password !== confirmPassword) {
+            setError("Konfirmasi kata sandi tidak cocok!");
+            return;
+        }
+
+        register({
+            username,
+            email,
+            password,
+            role: 'user',
+            isPremium: false
+        });
+        
+        alert("Berhasil mendaftar! Silakan masuk.");
+        navigate("/login");
+    };
+
     return (
         <div className="min-h-screen w-full flex items-center justify-center bg-[url('src/assets/bg-register.png')] bg-cover bg-center">
             <main className="w-full max-w-76.5 lg:max-w-132.25 bg-[#181A1C]/80 rounded-lg lg:rounded-2xl p-6 lg:p-10 flex flex-col items-center">
@@ -16,12 +66,29 @@ export const Register = () => {
                     <p className="text-white text-[10px] lg:text-lg opacity-80">Selamat datang!</p>
                 </div>
 
-                <form className="w-full" onSubmit={(e) => e.preventDefault()}>
+                <form className="w-full" onSubmit={handleRegister}>
+                    {error && (
+                        <p className="text-red-500 text-[10px] lg:text-sm mb-4 text-center bg-red-500/10 py-2 rounded-lg border border-red-500/50">
+                            {error}
+                        </p>
+                    )}
+
                     <InputField
                         id="username"
                         label="Username"
                         type="text"
                         placeholder="Masukkan username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                    />
+
+                    <InputField
+                        id="email"
+                        label="Email"
+                        type="email"
+                        placeholder="Masukkan email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                     />
 
                     <InputField
@@ -29,13 +96,17 @@ export const Register = () => {
                         label="Kata Sandi"
                         type="password"
                         placeholder="Masukkan kata sandi"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                     />
-                    
+
                     <InputField
                         id="confirmPassword"
                         label="Konfirmasi Kata Sandi"
                         type="password"
                         placeholder="Masukkan konfirmasi kata sandi"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
                         className="mb-1.5 lg:mb-3"
                     />
 
@@ -45,7 +116,7 @@ export const Register = () => {
                         </p>
                     </div>
 
-                    <Button variant="primary" className="w-full py-2! lg:py-3.5! rounded-2xl! lg:rounded-3xl!">
+                    <Button type="submit" variant="primary" className="w-full py-2! lg:py-3.5! rounded-2xl! lg:rounded-3xl!">
                         Daftar
                     </Button>
 

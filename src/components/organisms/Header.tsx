@@ -6,6 +6,8 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 
 import { genreList } from "../../const/genre";
 import { navLinks, profileLinks } from "../../const/navigation";
+import { Button } from "../atoms/Button";
+import { useAuthStore } from "../../store/useAuthStore";
 
 interface HeaderProps {
     withGenre?: boolean;
@@ -13,6 +15,7 @@ interface HeaderProps {
 
 export const Header = ({ withGenre }: HeaderProps) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const { isLoggedIn, logout, user } = useAuthStore();
 
     return (
         <header className='py-1.5 px-5 md:py-4 md:px-10 lg:py-6.25 lg:px-20 flex justify-between items-center md:gap-12 sticky top-0 w-full z-60 bg-other-page-header'>
@@ -77,33 +80,55 @@ export const Header = ({ withGenre }: HeaderProps) => {
             </div>
 
             {/* Profile Section */}
-            <div
-                className='relative flex items-center gap-1 md:gap-2 cursor-pointer'
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            >
-                <img
-                    src='src\assets\my-profile.jpeg'
-                    className='w-6 md:w-10 rounded-full'
-                    alt='avatar profile'
-                />
-                <MdOutlineKeyboardArrowDown className={`text-white text-2xl md:text-4xl transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+            {isLoggedIn ? (
+                <div
+                    className='relative flex items-center gap-1 md:gap-2 cursor-pointer'
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                >
+                    <img
+                        src={user?.avatar || '/src/assets/profile.png'}
+                        className='w-6 md:w-10 rounded-full border border-white/20 object-cover'
+                        alt='avatar profile'
+                    />
 
-                {isDropdownOpen && (
-                    <div className='absolute top-full right-0 mt-2 w-48 rounded-lg shadow-xl overflow-hidden z-50 bg-other-page-header border border-white/5'>
-                        {profileLinks.map((link) => (
-                            <Link
-                                key={link.name}
-                                to={link.path}
-                                className={`flex items-center gap-3 px-4 py-3 transition-colors text-sm 
-                        ${link.isLogout ? 'text-red-500 hover:bg-red-500/10' : 'text-white hover:text-blue-700 hover:bg-white/5'}`}
-                            >
-                                <link.icon className="text-lg" />
-                                <span>{link.name}</span>
-                            </Link>
-                        ))}
-                    </div>
-                )}
-            </div>
+                    <MdOutlineKeyboardArrowDown className={`text-white text-2xl md:text-4xl transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+
+                    {isDropdownOpen && (
+                        <div className='absolute top-full right-0 mt-2 w-48 rounded-lg shadow-xl overflow-hidden z-50 bg-other-page-header border border-white/5'>
+                            {profileLinks.map((link) => (
+                                <Link
+                                    key={link.name}
+                                    to={link.path}
+                                    onClick={link.isLogout ? logout : undefined}
+                                    className={`flex items-center gap-3 px-4 py-3 transition-colors text-sm 
+                                    ${link.isLogout ? 'text-red-500 hover:bg-red-500/10' : 'text-white hover:bg-white/5'}`}
+                                >
+                                    <link.icon className="text-lg" />
+                                    <span>{link.name}</span>
+                                </Link>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div className="flex gap-1 md:gap-2">
+                    <Button
+                        to="/login"
+                        variant="secondary"
+                        className="px-2! py-1! text-[10px]! md:text-sm! md:px-4! md:py-1.5! rounded-full!"
+                    >
+                        Masuk
+                    </Button>
+
+                    <Button
+                        to="/register"
+                        variant="primary"
+                        className="px-2! py-1! text-[10px]! md:text-sm! md:px-4! md:py-1.5! rounded-full!"
+                    >
+                        Daftar
+                    </Button>
+                </div>
+            )}
         </header>
     );
 };

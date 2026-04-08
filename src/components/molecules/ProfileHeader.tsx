@@ -1,12 +1,33 @@
 import { Button } from "../atoms/Button";
 
-export const ProfileHeader = () => {
+interface ProfileHeaderProps {
+    avatar: string;
+    onAvatarChange: (newAvatar: string) => void;
+}
+
+export const ProfileHeader = ({ avatar, onAvatarChange }: ProfileHeaderProps) => {
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.size > 2 * 1024 * 1024) {
+                alert("Ukuran file terlalu besar. Maksimal 2MB.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                onAvatarChange(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     return (
         <div className="flex items-center gap-6">
             <div className="size-20 lg:size-35 rounded-full overflow-hidden shrink-0">
                 <div className="w-full h-full bg-greyscale-700">
                     <img
-                        src="src\assets\my-profile.jpeg"
+                        src={avatar || "/src/assets/profile.png"}
                         alt="Profile"
                         className="w-full h-full object-cover"
                     />
@@ -23,6 +44,7 @@ export const ProfileHeader = () => {
                         <input
                             type="file"
                             accept="image/*"
+                            onChange={handleFileChange}
                             className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
                         />
                     </Button>

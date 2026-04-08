@@ -1,11 +1,36 @@
+import { useNavigate } from "react-router-dom";
 import { Button } from "../atoms/Button";
 import { DetailPaymentTitle } from "../atoms/DetailPaymentTitle";
 import { PaymentOption } from "../molecules/PaymentOption";
 import { PricingCard } from "../molecules/PricingCard";
 import { TransactionSummary } from "../molecules/TransactionSummary";
+import { useAuthStore } from "../../store/useAuthStore";
 
 export const PaymentSummarySection = () => {
+    const navigate = useNavigate();
+    const setPremium = useAuthStore((state) => state.setPremium);
+    const selectedPlan = useAuthStore((state) => state.selectedPlan);
     const paymentCode = "3KDJ5XFOV";
+
+    if (!selectedPlan) {
+        navigate("/subscription");
+        return null;
+    }
+
+    const handlePaymentAction = () => {
+        setPremium(true);
+        alert("Pembayaran Berhasil! Selamat menonton konten Premium.");
+        navigate("/profile");
+    };
+
+    const getFormattedDate = () => {
+        const date = new Date();
+        return new Intl.DateTimeFormat("id-ID", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+        }).format(date);
+    };
 
     const copyCodeToClipboard = async () => {
         try {
@@ -25,14 +50,10 @@ export const PaymentSummarySection = () => {
             <div className="grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-5 md:gap-8 lg:gap-10">
                 <aside>
                     <PricingCard
-                        title="Individual"
-                        price="Rp49,990/bulan"
-                        accounts="1 Akun"
-                        features={[
-                            "Tidak ada iklan",
-                            "Kualitas 720p",
-                            "Download konten pilihan",
-                        ]}
+                        title={selectedPlan.title}
+                        price={selectedPlan.price}
+                        accounts={selectedPlan.accounts}
+                        features={selectedPlan.features}
                     />
                 </aside>
                 <aside className="grid gap-4 lg:gap-7 lg:px-6">
@@ -50,7 +71,7 @@ export const PaymentSummarySection = () => {
                                     Tanggal Pembelian
                                 </span>
                                 <span className="text-text-light-primary text-right ml-auto">
-                                    08 Juni 2023
+                                    {getFormattedDate()}
                                 </span>
                             </li>
                             <li className="flex items-center gap-2">
@@ -81,7 +102,10 @@ export const PaymentSummarySection = () => {
                     </div>
                     <div className="space-y-3 lg:space-y-4">
                         <DetailPaymentTitle>Ringkasan Transaksi</DetailPaymentTitle>
-                        <TransactionSummary />
+                        <TransactionSummary
+                            planTitle={selectedPlan.title}
+                            planPrice={selectedPlan.rawPrice}
+                        />
                     </div>
                     <div className="space-y-2">
                         <DetailPaymentTitle>Tata Cara Pembayaran</DetailPaymentTitle>
@@ -102,7 +126,9 @@ export const PaymentSummarySection = () => {
                         </ol>
                     </div>
                     <div>
-                        <Button>Bayar</Button>
+                        <Button onClick={handlePaymentAction}>
+                            Bayar
+                        </Button>
                     </div>
                 </aside>
             </div>

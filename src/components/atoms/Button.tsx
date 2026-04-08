@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: 'primary' | 'outline' | 'dark' | 'light';
+    variant?: 'primary' | 'secondary' | 'outline' | 'dark' | 'light';
     children: React.ReactNode;
     to?: string;
 }
@@ -19,6 +19,7 @@ export const Button = ({
 
     const variants = {
         primary: "bg-primary-400 text-white hover:bg-primary-500 cursor-pointer",
+        secondary: "bg-[#181A1C] border border-white/20 text-white hover:bg-white/10 cursor-pointer",
         outline: "border border-primary-default text-primary-default hover:bg-primary-default hover:text-white cursor-pointer",
         dark: "bg-other-body text-white hover:bg-greyscale-800 cursor-pointer",
         light: "bg-text-light-secondary text-primary-300 cursor-default"

@@ -11,57 +11,38 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Payment } from './pages/Payment';
 import { PaymentDetail } from './pages/PaymentDetail';
+import { ProtectedRoute } from './components/organisms/ProtectedRoute';
 
 const router = createBrowserRouter([
+    { path: "login", element: <Login /> },
+    { path: "register", element: <Register /> },
+    
     {
         path: "/",
         element: <MainLayout />,
         children: [
+            { index: true, element: <Home /> },
+            { path: "series", element: <Series /> },
+            { path: "movies", element: <Movies /> },
+            { path: "subscription", element: <Subscription /> },
+
             {
-                index: true,
-                element: <Home />,
-            },
-            {
-                path: "series",
-                element: <Series />,
-            },
-            {
-                path: "movies",
-                element: <Movies />,
-            },
-            {
-                path: "my-list",
-                element: <MyList />,
-            },
-            {
-                path: "profile",
-                element: <Profile />,
-            },
-            {
-                path: "subscription",
-                element: <Subscription />,
-            },
-            {
-                path: "payment",
-                element: <Payment />,
-            },
-            {
-                path: "payment-detail",
-                element: <PaymentDetail />,
+                element: <ProtectedRoute />,
+                children: [
+                    { path: "my-list", element: <MyList /> },
+                    { path: "profile", element: <Profile /> },
+                    { path: "payment", element: <Payment /> },
+                    { path: "payment-detail", element: <PaymentDetail /> },
+                ]
             },
         ],
     },
+
     {
-        path: "login",
-        element: <Login />,
-    },
-    {
-        path: "register",
-        element: <Register />,
-    },
-    {
-        path: "movie-player/:id",
-        element: <MoviePlayer />,
+        element: <ProtectedRoute />,
+        children: [
+            { path: "movie-player/:id", element: <MoviePlayer /> },
+        ]
     },
 ]);
 

@@ -3,13 +3,15 @@ import { IoEyeOutline, IoEyeOffOutline } from "react-icons/io5"
 
 interface InputFieldProps {
     label: string;
-    type: 'text' | 'password';
+    type: 'text' | 'password' | 'email';
     placeholder: string;
     id: string;
     className?: string;
+    value: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export const InputField = ({ label, type, placeholder, id, className = "mb-5 lg:mb-9.25" }: InputFieldProps) => {
+export const InputField = ({ label, type, placeholder, id, value, onChange, className = "mb-5 lg:mb-9.25" }: InputFieldProps) => {
     const [showPassword, setShowPassword] = useState(false);
     const isPassword = type === 'password';
 
@@ -21,8 +23,10 @@ export const InputField = ({ label, type, placeholder, id, className = "mb-5 lg:
             <div className="relative">
                 <input
                     id={id}
-                    type={isPassword ? (showPassword ? 'text' : 'password') : 'text'}
+                    type={isPassword ? (showPassword ? 'text' : 'password') : type}
                     placeholder={placeholder}
+                    value={value}
+                    onChange={onChange}
                     className="w-full bg-transparent border border-[#E7E3FC] rounded-xl lg:rounded-3xl px-3 lg:px-5 py-2 lg:py-3.5 text-[10px] lg:text-base text-text-light-secondary focus:outline-none transition-all placeholder:opacity-50"
                 />
 

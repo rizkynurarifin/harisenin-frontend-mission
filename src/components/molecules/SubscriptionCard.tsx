@@ -1,11 +1,15 @@
 import { Button } from "../atoms/Button";
 
 interface SubscriptionCardProps {
-    isPremium: boolean;
+    isPremium?: boolean;
     expiryDate?: string;
 }
 
-export const SubscriptionCard = ({ isPremium, expiryDate }: SubscriptionCardProps) => {
+export const SubscriptionCard = ({
+    isPremium = false,
+    expiryDate
+}: SubscriptionCardProps) => {
+    
     if (isPremium) {
         return (
             <article className="flex flex-col justify-center gap-5 w-full bg-[linear-gradient(286.17deg,#192DB7_0%,#5370D4_100%)] rounded-xl h-min p-5 lg:p-6">

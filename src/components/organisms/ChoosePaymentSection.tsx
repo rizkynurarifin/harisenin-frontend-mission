@@ -5,6 +5,8 @@ import { InputVoucher } from "../atoms/InputVoucher";
 import { PricingCard } from "../molecules/PricingCard";
 import { TransactionSummary } from "../molecules/TransactionSummary";
 import { PaymentMethod, type PaymentMethodOption } from "../molecules/PaymentMethod";
+import { Navigate } from "react-router-dom";
+import { useAuthStore } from "../../store/useAuthStore";
 
 const paymentMethodOptions: PaymentMethodOption[] = [
     {
@@ -26,6 +28,12 @@ const paymentMethodOptions: PaymentMethodOption[] = [
 
 export const ChoosePaymentSection = () => {
     const [selectedPayment, setSeletectedPayment] = useState("");
+    const selectedPlan = useAuthStore((state) => state.selectedPlan);
+
+    // Proteksi: Jika tidak ada paket dipilih, kembalikan ke halaman subscription
+    if (!selectedPlan) {
+        return <Navigate to="/subscription" replace />;
+    }
 
     return (
         <section className="px-5 pt-5 pb-10 md:px-10 md:py-8 lg:px-20 lg:py-10 lg:my-20">
@@ -35,14 +43,10 @@ export const ChoosePaymentSection = () => {
             <div className="grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-5 md:gap-8 lg:gap-10">
                 <aside>
                     <PricingCard
-                        title="Individual"
-                        price="Rp49,990/bulan"
-                        accounts="1 Akun"
-                        features={[
-                            "Tidak ada iklan",
-                            "Kualitas 720p",
-                            "Download konten pilihan",
-                        ]}
+                        title={selectedPlan.title}
+                        price={selectedPlan.price}
+                        accounts={selectedPlan.accounts}
+                        features={selectedPlan.features}
                     />
                 </aside>
 
@@ -63,10 +67,13 @@ export const ChoosePaymentSection = () => {
                             <Button variant="dark">Gunakan</Button>
                         </div>
                     </div>
-                    
+
                     <div className="grid gap-4">
                         <DetailPaymentTitle>Ringkasan Transaksi</DetailPaymentTitle>
-                        <TransactionSummary />
+                        <TransactionSummary
+                            planTitle={selectedPlan.title}
+                            planPrice={selectedPlan.rawPrice}
+                        />
                         <Button to="/payment-detail" className="w-fit">
                             Bayar
                         </Button>

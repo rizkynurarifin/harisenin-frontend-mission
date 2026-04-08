@@ -5,9 +5,10 @@ interface PricingCardProps {
     price: string;
     accounts: string;
     features: string[];
+    onClick?: () => void;
 }
 
-export const PricingCard = ({ title, price, accounts, features }: PricingCardProps) => {
+export const PricingCard = ({ title, price, accounts, features, onClick }: PricingCardProps) => {
     return (
         <article className="flex flex-col items-center gap-6 lg:gap-9.5 rounded-xl p-6 bg-[linear-gradient(286.17deg,#192DB7_0%,#5370D4_100%)]">
             <div className="flex flex-col gap-6 w-full grow">
@@ -36,7 +37,7 @@ export const PricingCard = ({ title, price, accounts, features }: PricingCardPro
 
             <div className="flex flex-col items-center gap-1">
                 <Button
-                    to="/payment"
+                    onClick={onClick}
                     className="w-full bg-white text-primary-300! hover:bg-white/90 py-2.5"
                 >
                     Langganan

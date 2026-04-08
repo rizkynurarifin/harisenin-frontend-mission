@@ -1,16 +1,37 @@
+import { useState } from "react";
 import { Button } from "../components/atoms/Button";
 import { InputInsetLabel } from "../components/atoms/InputInsetLabel";
 import { ProfileHeader } from "../components/molecules/ProfileHeader";
 import { SubscriptionCard } from "../components/molecules/SubscriptionCard";
 import { MovieSection } from "../components/templates/MovieSection";
 import { MY_LIST } from "../const/movies";
+import { useAuthStore } from "../store/useAuthStore";
 
 const Profile = () => {
-    const isPremiumUser = false;
+    const { user, updateProfile } = useAuthStore();
+
+    const [formData, setFormData] = useState({
+        username: user?.username || "",
+        email: user?.email || "",
+        password: user?.password || "",
+        avatar: user?.avatar || "",
+        isPremium: user?.isPremium || false
+    });
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { id, value } = e.target;
+        setFormData(prev => ({ ...prev, [id]: value }));
+    };
+
+    const handleSave = (e: React.FormEvent) => {
+        e.preventDefault();
+        updateProfile(formData);
+        alert("Profil berhasil diperbarui!");
+    };
 
     return (
-        <main>
-            <section className="flex flex-col gap-5 lg:gap-8 px-5 py-5 lg:px-20 lg:py-10 w-full">
+        <main key={user?.username}>
+            <form onSubmit={handleSave} className="flex flex-col gap-5 lg:gap-8 px-5 py-5 lg:px-20 lg:py-10 w-full">
                 {/* Title Desktop */}
                 <h1 className="hidden lg:inline text-white font-bold text-xl lg:text-3xl text-left">
                     Profil Saya
@@ -24,13 +45,35 @@ const Profile = () => {
                             <h1 className="lg:hidden text-white font-bold text-xl text-left mb-8">
                                 Profil Saya
                             </h1>
-                            <ProfileHeader />
+                            <ProfileHeader
+                                avatar={formData.avatar}
+                                onAvatarChange={(newAvatar) => setFormData(prev => ({ ...prev, avatar: newAvatar }))}
+                            />
                         </div>
 
                         <div className="flex flex-col gap-8">
-                            <InputInsetLabel label="Nama Pengguna" placeholder="Rizky" hasEdit />
-                            <InputInsetLabel label="Email" placeholder="arifinnurrizky@gmail.com" />
-                            <InputInsetLabel type="password" label="Kata Sandi" placeholder="***************" hasEdit />
+                            <InputInsetLabel
+                                id="username"
+                                label="Nama Pengguna"
+                                value={formData.username}
+                                onChange={handleChange}
+                                hasEdit
+                            />
+                            <InputInsetLabel
+                                id="email"
+                                label="Email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                hasEdit
+                            />
+                            <InputInsetLabel
+                                id="password"
+                                type="password"
+                                label="Kata Sandi"
+                                value={formData.password}
+                                onChange={handleChange}
+                                hasEdit
+                            />
                         </div>
 
                         <Button
@@ -45,12 +88,12 @@ const Profile = () => {
                     {/* Kolom Kanan: Informasi Langganan */}
                     <div className="flex-1 flex flex-col gap-2">
                         <SubscriptionCard
-                            isPremium={isPremiumUser}
+                            isPremium={user?.isPremium}
                             expiryDate="31 Desember 2026"
                         />
                     </div>
                 </div>
-            </section>
+            </form>
 
             <MovieSection
                 title="Daftar Saya"
