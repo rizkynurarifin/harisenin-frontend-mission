@@ -11,12 +11,15 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Payment } from './pages/Payment';
 import { PaymentDetail } from './pages/PaymentDetail';
-import { ProtectedRoute } from './components/organisms/ProtectedRoute';
+import { AdminRoute, ProtectedRoute } from './components/organisms/ProtectedRoute';
+import Dashboard from './pages/admin/Dashboard';
+import CreateMovie from './pages/admin/CreateMovie';
+import EditMovie from './pages/admin/EditMovie';
 
 const router = createBrowserRouter([
     { path: "login", element: <Login /> },
     { path: "register", element: <Register /> },
-    
+
     {
         path: "/",
         element: <MainLayout />,
@@ -35,6 +38,16 @@ const router = createBrowserRouter([
                     { path: "payment-detail", element: <PaymentDetail /> },
                 ]
             },
+
+            {
+                path: "admin",
+                element: <AdminRoute />,
+                children: [
+                    { index: true, element: <Dashboard /> },
+                    { path: "create", element: <CreateMovie /> },
+                    { path: "edit/:id", element: <EditMovie /> }
+                ]
+            }
         ],
     },
 

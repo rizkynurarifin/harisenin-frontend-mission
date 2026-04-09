@@ -3,11 +3,11 @@ import { Link } from "react-router-dom";
 import { IoChevronUp } from "react-icons/io5";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-
 import { genreList } from "../../const/genre";
 import { navLinks, profileLinks } from "../../const/navigation";
 import { Button } from "../atoms/Button";
 import { useAuthStore } from "../../store/useAuthStore";
+import { IoMdSettings } from "react-icons/io";
 
 interface HeaderProps {
     withGenre?: boolean;
@@ -107,6 +107,13 @@ export const Header = ({ withGenre }: HeaderProps) => {
                                     <span>{link.name}</span>
                                 </Link>
                             ))}
+                            {/* Tambahkan link Admin jika rolenya admin */}
+                            {user?.role === 'admin' && (
+                                <Link to="/admin" className="flex items-center gap-3 px-4 py-3 text-blue-400 hover:bg-white/5 text-sm border-t border-white/5">
+                                    <IoMdSettings className="text-lg" />
+                                    <span>Panel Admin</span>
+                                </Link>
+                            )}
                         </div>
                     )}
                 </div>

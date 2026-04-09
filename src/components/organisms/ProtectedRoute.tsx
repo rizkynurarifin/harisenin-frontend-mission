@@ -10,3 +10,13 @@ export const ProtectedRoute = () => {
     
     return <Outlet />;
 };
+
+export const AdminRoute = () => {
+    const { isLoggedIn, user } = useAuthStore();
+
+    if (!isLoggedIn || user?.role !== 'admin') {
+        return <Navigate to="/" replace />;
+    }
+
+    return <Outlet />;
+};
