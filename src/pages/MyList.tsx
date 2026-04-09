@@ -13,14 +13,14 @@ const MyList = () => {
         : [];
 
     return (
-        <main>
+        <>
             <MovieSection
                 title="Daftar Saya"
                 movies={myMovies}
                 variant="portrait"
                 isGrid={true}
             />
-        </main>
+        </>
     );
 };
 

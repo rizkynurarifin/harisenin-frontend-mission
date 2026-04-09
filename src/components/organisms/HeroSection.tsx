@@ -1,12 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { MdVolumeUp, MdVolumeOff } from "react-icons/md";
 import { genreList } from '../../const/genre';
-import { NEW_RELEASE_MOVIES, NEW_RELEASE_SERIES } from '../../const/movies';
+import { type Movie } from '../../const/movies';
 import { IoChevronDown } from 'react-icons/io5';
 import { IoMdInformationCircleOutline } from 'react-icons/io';
 import { PopupDetail } from './PopupDetail';
 import { Link, useLocation } from 'react-router-dom';
+import { useMovieStore } from '../../store/useMovieStore';
 
 interface HeroSectionProps {
     withGenre?: boolean;
@@ -15,19 +16,25 @@ interface HeroSectionProps {
 export const HeroSection = ({ withGenre }: HeroSectionProps) => {
     const [mutedVideo, setMutedVideo] = useState(true);
     const [detailSeriesDialog, setDetailSeriesDialog] = useState(false);
-    
+
+    const movies = useMovieStore((state) => state.movies);
+
     const location = useLocation();
     const pathname = location.pathname.toLowerCase();
 
+    const getLiveMovie = useCallback((id: number): Movie | undefined => {
+        return movies.find((m) => m.id === id);
+    }, [movies]);
+
     const heroData = useMemo(() => {
         if (pathname.includes('series')) {
-            return NEW_RELEASE_SERIES.find(s => s.id === 12) || NEW_RELEASE_SERIES[0];
+            return getLiveMovie(19) || movies[0];
         } else if (pathname.includes('movies')) {
-            return NEW_RELEASE_MOVIES.find(m => m.id === 1) || NEW_RELEASE_MOVIES[0];
+            return getLiveMovie(6) || movies[0];
         }
 
-        return NEW_RELEASE_SERIES[0];
-    }, [pathname]);
+        return getLiveMovie(19) || movies[0];
+    }, [pathname, getLiveMovie, movies]);
 
     return (
         <>

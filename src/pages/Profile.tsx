@@ -37,7 +37,7 @@ const Profile = () => {
     };
 
     return (
-        <main key={user?.username}>
+        <div key={user?.username}>
             <form onSubmit={handleSave} className="flex flex-col gap-5 lg:gap-8 px-5 py-5 lg:px-20 lg:py-10 w-full">
                 {/* Title Desktop */}
                 <h1 className="hidden lg:inline text-white font-bold text-xl lg:text-3xl text-left">
@@ -109,7 +109,7 @@ const Profile = () => {
                 isGrid={true}
                 className="-mt-5 lg:-mt-10"
             />
-        </main>
+        </div>
     );
 };
 

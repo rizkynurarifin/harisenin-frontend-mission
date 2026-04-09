@@ -3,10 +3,10 @@ import { PricingSection } from "../components/organisms/PricingSection";
 
 const Subscription = () => {
     return (
-        <main>
+        <>
             <BenefitSection />
             <PricingSection />
-        </main>
+        </>
     );
 };
 
