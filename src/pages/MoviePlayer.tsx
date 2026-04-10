@@ -1,39 +1,31 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ALL_CONTENT } from '../const/movies';
 import { VideoControllerBar } from '../components/organisms/VideoControllerBar';
-import { useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { PremiumOverlay } from '../components/organisms/PremiumOverlay';
 import { useAuthStore } from '../store/useAuthStore';
+import { useMovieStore } from '../store/useMovieStore';
 
 export const MoviePlayer = () => {
-    const { id } = useParams();
+    const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isPlaying, setIsPlaying] = useState(true);
+
+    const { movies, fetchMovies, isLoading } = useMovieStore();
     const isUserPremium = useAuthStore((state) => state.user?.isPremium ?? false);
 
-    const movie = ALL_CONTENT[Number(id)];
+    useEffect(() => {
+        if (movies.length === 0) {
+            fetchMovies();
+        }
+    }, [fetchMovies, movies.length]);
 
-    if (!movie) {
-        return (
-            <div className="bg-black h-screen flex flex-col items-center justify-center text-white">
-                <p className="mb-4 font-medium">Film tidak ditemukan.</p>
-                <Link
-                    to="/"
-                    className="bg-primary px-6 py-2 rounded-md hover:bg-primary/80 transition-colors"
-                >
-                    Kembali ke Home
-                </Link>
-            </div>
-        );
-    }
-    
-    const isPremiumOnly = movie.isPremium && !isUserPremium;
-    const episodesData = movie.type === 'series' ? movie.episodes : [];
-    const hasTrailer = !!movie.trailerUrl;
+    const movie = useMemo(() => {
+        return movies.find((m) => String(m.id) === String(id));
+    }, [movies, id]);
 
     const togglePlay = () => {
-        if (isPremiumOnly) return;
+        if (!movie || (movie.isPremium && !isUserPremium)) return;
 
         if (videoRef.current) {
             if (isPlaying) {
@@ -45,6 +37,32 @@ export const MoviePlayer = () => {
         }
     };
 
+    if (isLoading && movies.length === 0) {
+        return (
+            <div className="bg-black h-screen flex items-center justify-center text-white">
+                <p className="animate-pulse">Memuat konten...</p>
+            </div>
+        );
+    }
+
+    if (!movie) {
+        return (
+            <div className="bg-black h-screen flex flex-col items-center justify-center text-white">
+                <p className="mb-4 font-medium text-lg">Maaf, konten tidak tersedia.</p>
+                <Link
+                    to="/"
+                    className="bg-primary-300 px-6 py-2 rounded-full hover:bg-blue-700 transition-all active:scale-95"
+                >
+                    Kembali ke Beranda
+                </Link>
+            </div>
+        );
+    }
+
+    const isPremiumOnly = movie.isPremium && !isUserPremium;
+    const episodesData = movie.type === 'series' ? movie.episodes : [];
+    const hasTrailer = !!movie.trailerUrl;
+
     return (
         <div className="min-h-dvh w-full relative">
             {/* 1. Overlay Premium */}
@@ -55,6 +73,7 @@ export const MoviePlayer = () => {
                 {hasTrailer ? (
                     <video
                         ref={videoRef}
+                        key={movie.trailerUrl}
                         src={movie.trailerUrl}
                         className="w-full h-full object-cover"
                         autoPlay={!isPremiumOnly}

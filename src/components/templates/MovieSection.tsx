@@ -1,6 +1,7 @@
 import { MovieCard } from "../molecules/MovieCard";
 import { MovieCarousel } from "../organisms/MovieCarousel";
 import type { Movie } from "../../const/movies";
+import { MdMovie } from "react-icons/md";
 
 interface MovieSectionProps {
     title: string;
@@ -31,8 +32,16 @@ export const MovieSection = ({
             </h3>
 
             {movies.length === 0 ? (
-                <div className="w-full py-10 text-center border border-dashed border-gray-600 rounded-lg text-secondary">
-                    Belum ada film di daftar kamu.
+                <div className="w-full py-16 flex flex-col items-center justify-center border border-dashed border-gray-700 rounded-2xl bg-gray-900/20 px-4">
+                    <MdMovie filter="grayscale(1)" className="text-6xl text-gray-600 mb-4" />
+                    <div className="max-w-xs text-center"> {/* Pembungkus agar teks tetap di tengah dan tidak melebar */}
+                        <p className="text-gray-400 font-medium text-lg leading-tight">
+                            Wah, {title.toLowerCase()} masih kosong!
+                        </p>
+                        <p className="text-gray-500 text-sm mt-2">
+                            Coba cek kategori lain atau refresh halaman.
+                        </p>
+                    </div>
                 </div>
             ) : isGrid ? (
                 <div className={`grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 ${carouselGap} w-full`}>

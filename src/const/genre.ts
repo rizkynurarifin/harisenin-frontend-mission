@@ -4,7 +4,7 @@ export const genreList = [
     "Anime",
     "Britania",
     "Drama",
-    "Fantasi Ilmiah & Fantasi",
+    "Fantasi",
     "Kejahatan",
     "KDrama",
     "Komedi",

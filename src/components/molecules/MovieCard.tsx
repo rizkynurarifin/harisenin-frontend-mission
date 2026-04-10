@@ -11,6 +11,16 @@ interface MovieCardProps {
     variant?: 'landscape' | 'portrait';
 }
 
+const formatDuration = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+
+    if (hours > 0) {
+        return remainingMinutes > 0 ? `${hours}j ${remainingMinutes}m` : `${hours}j`;
+    }
+    return `${remainingMinutes}m`;
+};
+
 export const MovieCard = ({ movie, variant = 'landscape' }: MovieCardProps) => {
     const {
         id,
@@ -30,7 +40,7 @@ export const MovieCard = ({ movie, variant = 'landscape' }: MovieCardProps) => {
     } = movie;
 
     const navigate = useNavigate();
-    
+
     const user = useAuthStore((state) => state.user);
     const addToMyList = useAuthStore((state) => state.addToMyList);
     const removeFromMyList = useAuthStore((state) => state.removeFromMyList);
@@ -52,8 +62,8 @@ export const MovieCard = ({ movie, variant = 'landscape' }: MovieCardProps) => {
         : (movieProgress || 0);
 
     const displayDuration = type === 'series'
-        ? (currentEpisode?.duration || "0 min")
-        : (duration || "0 min");
+        ? (currentEpisode?.duration ? formatDuration(currentEpisode.duration) : "0m")
+        : (duration ? formatDuration(duration) : "0m");
 
     // Fungsi Handle Daftar Saya
     const handleMyListToggle = (e: React.MouseEvent) => {
@@ -174,7 +184,7 @@ export const MovieCard = ({ movie, variant = 'landscape' }: MovieCardProps) => {
                                     {ageRating}
                                 </span>
                                 <span className='font-bold lg:text-lg text-white'>
-                                    {type === 'series' ? `${totalEpisodes} Episode` : duration}
+                                    {type === 'series' ? `${totalEpisodes} Episode` : formatDuration(duration)}
                                 </span>
                             </div>
                         )}

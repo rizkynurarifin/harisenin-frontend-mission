@@ -1,73 +1,68 @@
-import { useCallback, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { HeroSection } from "../components/organisms/HeroSection";
 import { MovieSection } from "../components/templates/MovieSection";
-import { type Movie } from "../const/movies";
 import { useMovieStore } from "../store/useMovieStore";
+import { PageSkeleton } from "../components/templates/PageSkeleton";
 
 const Movies = () => {
-    const movies = useMovieStore((state) => state.movies);
+    const { movies, fetchMovies, isLoading } = useMovieStore();
 
-    const getLiveMovie = useCallback((id: number): Movie | undefined => {
-        return movies.find((m) => m.id === id);
-    }, [movies]);
+    useEffect(() => {
+        if (movies.length === 0) {
+            fetchMovies();
+        }
+    }, [fetchMovies, movies.length]);
 
-    const continueWatchingMovies = useMemo(() => {
-        const config = [
-            { id: 1, progress: 80 },
-            { id: 2, progress: 20 },
-            { id: 3, progress: 65 },
-            { id: 4, progress: 45 },
-            { id: 5, progress: 75 },
-            { id: 6, progress: 15 },
-        ];
+    const allMovies = useMemo(() =>
+        movies.filter((m) => m.type?.toLowerCase() === "movie"),
+        [movies]);
 
-        return config
-            .map((item) => {
-                const live = getLiveMovie(item.id);
-                if (!live) return null;
-
-                return {
-                    ...live,
-                    progress: item.progress
-                } as Movie;
-            })
-            .filter((m): m is Movie => m !== null);
-    }, [getLiveMovie]);
+    const continueWatching = useMemo(() =>
+        allMovies
+            .filter((m) => (m.progress ?? 0) > 0)
+            .slice(0, 6),
+        [allMovies]);
 
     const chillExclusiveMovies = useMemo(() =>
-        [7, 4, 8, 9, 2, 11]
-            .map(id => getLiveMovie(id))
-            .filter((m): m is Movie => !!m),
-        [getLiveMovie]);
+        allMovies
+            .filter((m) => m.isPremium)
+            .slice(0, 6),
+        [allMovies]);
 
-    const topRatingMovies = useMemo(() =>
-        [8, 2, 3, 7, 4, 6]
-            .map(id => getLiveMovie(id))
-            .filter((m): m is Movie => !!m),
-        [getLiveMovie]);
+    const topRating = useMemo(() =>
+        [...allMovies]
+            .sort((a, b) => b.rating - a.rating)
+            .slice(0, 6),
+        [allMovies]);
 
-    const trendingMovies = useMemo(() =>
-        [3, 6, 10, 11, 5, 12]
-            .map(id => getLiveMovie(id))
-            .filter((m): m is Movie => !!m),
-        [getLiveMovie]);
+    const trending = useMemo(() =>
+        allMovies
+            .filter((m) => m.isTop10)
+            .slice(0, 6),
+        [allMovies]);
 
-    const newReleaseMovies = useMemo(() =>
-        [6, 13, 5, 12, 11, 8]
-            .map(id => getLiveMovie(id))
-            .filter((m): m is Movie => !!m),
-        [getLiveMovie]);
+    const newRelease = useMemo(() =>
+        allMovies
+            .filter((m) => m.year >= 2023)
+            .slice(0, 6),
+        [allMovies]);
+
+    if (isLoading) {
+        return <PageSkeleton withGenre={true} />;
+    }
 
     return (
         <>
             <HeroSection withGenre />
 
-            <MovieSection
-                title="Melanjutkan Tonton Film"
-                movies={continueWatchingMovies}
-                variant="landscape"
-                className="bg-other-page-header -mt-1"
-            />
+            {continueWatching.length > 0 && (
+                <MovieSection
+                    title="Melanjutkan Tonton Film"
+                    movies={continueWatching}
+                    variant="landscape"
+                    className="bg-other-page-header -mt-1"
+                />
+            )}
 
             <MovieSection
                 title="Film Persembahan Chill"
@@ -77,19 +72,19 @@ const Movies = () => {
 
             <MovieSection
                 title="Top Rating Film Hari ini"
-                movies={topRatingMovies}
+                movies={topRating}
                 variant="portrait"
             />
 
             <MovieSection
                 title="Film Trending"
-                movies={trendingMovies}
+                movies={trending}
                 variant="portrait"
             />
 
             <MovieSection
                 title="Rilis Baru"
-                movies={newReleaseMovies}
+                movies={newRelease}
                 variant="portrait"
             />
         </>

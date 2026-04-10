@@ -15,6 +15,7 @@ import { AdminRoute, ProtectedRoute } from './components/organisms/ProtectedRout
 import Dashboard from './pages/admin/Dashboard';
 import CreateMovie from './pages/admin/CreateMovie';
 import EditMovie from './pages/admin/EditMovie';
+import { NotFound } from './pages/NotFound';
 
 const router = createBrowserRouter([
     { path: "login", element: <Login /> },
@@ -57,6 +58,11 @@ const router = createBrowserRouter([
             { path: "movie-player/:id", element: <MoviePlayer /> },
         ]
     },
+
+    {
+        path: "*",
+        element: <NotFound />
+    }
 ]);
 
 function App() {

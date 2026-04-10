@@ -16,7 +16,7 @@ interface UserData {
     avatar?: string;
     role: 'user' | 'admin';
     isPremium: boolean;
-    myList: number[];
+    myList: string[];
 }
 
 interface AuthStore {
@@ -32,8 +32,8 @@ interface AuthStore {
     updateProfile: (updatedData: Partial<UserData>) => void;
     setPremium: (status: boolean) => void;
     setSelectedPlan: (plan: Plan | null) => void;
-    addToMyList: (movieId: number) => void;
-    removeFromMyList: (movieId: number) => void;
+    addToMyList: (movieId: string) => void;
+    removeFromMyList: (movieId: string) => void;
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -50,7 +50,7 @@ export const useAuthStore = create<AuthStore>()(
                     role: 'admin',
                     avatar: '/src/assets/my-profile.jpeg',
                     isPremium: true,
-                    myList: [1, 2, 3],
+                    myList: [],
                 }
             ],
 
@@ -121,9 +121,9 @@ export const useAuthStore = create<AuthStore>()(
             // Logika menambahkan film ke daftar
             addToMyList: (movieId) => {
                 const { user, registeredUsers } = get();
-                if (!user || user.myList.includes(movieId)) return;
+                if (!user || user.myList.includes(String(movieId))) return;
 
-                const updatedUser = { ...user, myList: [...user.myList, movieId] };
+                const updatedUser = { ...user, myList: [...user.myList, String(movieId)] };
                 const updatedList = registeredUsers.map((u) =>
                     u.email === user.email ? updatedUser : u
                 );
@@ -138,7 +138,7 @@ export const useAuthStore = create<AuthStore>()(
 
                 const updatedUser = {
                     ...user,
-                    myList: user.myList.filter(id => id !== movieId)
+                    myList: user.myList.filter(id => String(id) !== String(movieId))
                 };
                 const updatedList = registeredUsers.map((u) =>
                     u.email === user.email ? updatedUser : u

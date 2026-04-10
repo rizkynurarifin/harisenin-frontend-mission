@@ -1,33 +1,73 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { ALL_CONTENT, type Movie } from '../const/movies';
+import { movieService } from '../services/api/movieService';
+import type { Movie } from '../const/movies';
 
 interface MovieStore {
     movies: Movie[];
-    addMovie: (newMovie: Movie) => void;
-    updateMovie: (updatedMovie: Movie) => void;
-    deleteMovie: (id: number) => void;
+    isLoading: boolean;
+    error: string | null;
+    
+    fetchMovies: () => Promise<void>;
+    addMovie: (newMovie: Omit<Movie, 'id'>) => Promise<void>;
+    updateMovie: (id: string, updatedMovie: Partial<Movie>) => Promise<void>;
+    deleteMovie: (id: string) => Promise<void>;
 }
 
-export const useMovieStore = create<MovieStore>()(
-    persist(
-        (set) => ({
-            movies: Object.values(ALL_CONTENT),
+export const useMovieStore = create<MovieStore>((set) => ({
+    movies: [],
+    isLoading: false,
+    error: null,
 
-            addMovie: (newMovie) => set((state) => ({
-                movies: [newMovie, ...state.movies]
-            })),
-
-            updateMovie: (updatedMovie) => set((state) => ({
-                movies: state.movies.map(m => m.id === updatedMovie.id ? updatedMovie : m)
-            })),
-
-            deleteMovie: (id) => set((state) => ({
-                movies: state.movies.filter(m => m.id !== id)
-            })),
-        }),
-        {
-            name: 'chill-movie-storage',
+    fetchMovies: async () => {
+        set({ isLoading: true, error: null });
+        try {
+            const data = await movieService.getAllMovies();
+            set({ movies: data.reverse(), isLoading: false });
+        } catch (err) {
+            console.error("Error detail:", err);
+            set({ error: 'Gagal memuat konten dari server', isLoading: false });
         }
-    )
-);
+    },
+
+    addMovie: async (newMovie) => {
+        set({ isLoading: true });
+        try {
+            const createdMovie = await movieService.createMovie(newMovie);
+            set((state) => ({
+                movies: [createdMovie, ...state.movies],
+                isLoading: false
+            }));
+        } catch (err) {
+            console.error("Error detail:", err);
+            set({ error: 'Gagal menambah data', isLoading: false });
+        }
+    },
+
+    updateMovie: async (id, updatedMovie) => {
+        set({ isLoading: true });
+        try {
+            const result = await movieService.updateMovie(id, updatedMovie);
+            set((state) => ({
+                movies: state.movies.map(m => String(m.id) === String(id) ? result : m),
+                isLoading: false
+            }));
+        } catch (err) {
+            console.error("Error detail:", err);
+            set({ error: 'Gagal memperbarui data', isLoading: false });
+        }
+    },
+
+    deleteMovie: async (id) => {
+        set({ isLoading: true });
+        try {
+            await movieService.deleteMovie(id);
+            set((state) => ({
+                movies: state.movies.filter(m => String(m.id) !== String(id)),
+                isLoading: false
+            }));
+        } catch (err) {
+            console.error("Error detail:", err);
+            set({ error: 'Gagal menghapus data', isLoading: false });
+        }
+    },
+}));

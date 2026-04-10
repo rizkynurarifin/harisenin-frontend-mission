@@ -1,56 +1,68 @@
-import { useCallback, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { HeroSection } from "../components/organisms/HeroSection";
 import { MovieSection } from "../components/templates/MovieSection";
-import { type Movie } from "../const/movies";
 import { useMovieStore } from "../store/useMovieStore";
+import { PageSkeleton } from "../components/templates/PageSkeleton";
 
 const Series = () => {
-    const movies = useMovieStore((state) => state.movies);
+    const { movies, fetchMovies, isLoading } = useMovieStore();
 
-    const getLiveMovie = useCallback((id: number): Movie | undefined => {
-        return movies.find((m) => m.id === id);
-    }, [movies]);
+    useEffect(() => {
+        if (movies.length === 0) {
+            fetchMovies();
+        }
+    }, [fetchMovies, movies.length]);
 
-    const continueWatchingSeries = useMemo(() =>
-        [16, 17, 14, 18, 19, 15]
-            .map(id => getLiveMovie(id))
-            .filter((m): m is Movie => !!m),
-        [getLiveMovie]);
+    const allSeries = useMemo(() =>
+        movies.filter((m) => m.type?.toLowerCase() === "series"),
+        [movies]);
+
+    const continueWatching = useMemo(() =>
+        allSeries
+            .filter((m) => (m.progress ?? 0) > 0)
+            .slice(0, 6),
+        [allSeries]);
 
     const chillExclusiveSeries = useMemo(() =>
-        [17, 19, 18, 14, 16, 20]
-            .map(id => getLiveMovie(id))
-            .filter((m): m is Movie => !!m),
-        [getLiveMovie]);
+        allSeries
+            .filter((m) => m.isPremium)
+            .slice(0, 6),
+        [allSeries]);
 
-    const topRatingSeries = useMemo(() =>
-        [19, 17, 14, 18, 16, 20]
-            .map(id => getLiveMovie(id))
-            .filter((m): m is Movie => !!m),
-        [getLiveMovie]);
+    const topRating = useMemo(() =>
+        [...allSeries]
+            .sort((a, b) => b.rating - a.rating)
+            .slice(0, 6),
+        [allSeries]);
 
-    const trendingSeries = useMemo(() =>
-        [18, 19, 17, 16, 15, 20]
-            .map(id => getLiveMovie(id))
-            .filter((m): m is Movie => !!m),
-        [getLiveMovie]);
+    const trending = useMemo(() =>
+        allSeries
+            .filter((m) => m.isTop10)
+            .slice(0, 6),
+        [allSeries]);
 
-    const newReleaseSeries = useMemo(() =>
-        [19, 14, 20, 16, 18, 17]
-            .map(id => getLiveMovie(id))
-            .filter((m): m is Movie => !!m),
-        [getLiveMovie]);
+    const newRelease = useMemo(() =>
+        allSeries
+            .filter((m) => m.isNewEpisode || m.year >= 2023)
+            .slice(0, 6),
+        [allSeries]);
+
+    if (isLoading) {
+        return <PageSkeleton withGenre={true} />;
+    }
 
     return (
         <>
             <HeroSection withGenre />
 
-            <MovieSection
-                title="Melanjutkan Tonton Series"
-                movies={continueWatchingSeries}
-                variant="landscape"
-                className="bg-other-page-header -mt-1"
-            />
+            {continueWatching.length > 0 && (
+                <MovieSection
+                    title="Melanjutkan Tonton Series"
+                    movies={continueWatching}
+                    variant="landscape"
+                    className="bg-other-page-header -mt-1"
+                />
+            )}
 
             <MovieSection
                 title="Series Persembahan Chill"
@@ -60,19 +72,19 @@ const Series = () => {
 
             <MovieSection
                 title="Top Rating Series Hari ini"
-                movies={topRatingSeries}
+                movies={topRating}
                 variant="portrait"
             />
 
             <MovieSection
                 title="Series Trending"
-                movies={trendingSeries}
+                movies={trending}
                 variant="portrait"
             />
 
             <MovieSection
                 title="Rilis Baru"
-                movies={newReleaseSeries}
+                movies={newRelease}
                 variant="portrait"
             />
         </>

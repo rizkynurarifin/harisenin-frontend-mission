@@ -9,11 +9,29 @@ import { PopupDetail } from './PopupDetail';
 import { Link, useLocation } from 'react-router-dom';
 import { useMovieStore } from '../../store/useMovieStore';
 
+const fallbackData: Movie = {
+    id: "0",
+    type: "movie",
+    title: "Selamat Datang di CHILL",
+    year: 2026,
+    trailerUrl: "/assets/trailer/trailer.mp4",
+    thumbnail: "/assets/images/default-hero.jpg",
+    thumbnailLandscape: "/assets/images/default-hero.jpg",
+    rating: 5,
+    ageRating: "SU",
+    duration: 0,
+    genres: [],
+    casts: [],
+    creators: [],
+    description: "Nikmati ribuan film dan series eksklusif hanya untukmu. Masuk atau daftar sekarang untuk mulai menonton konten favorit di mana saja."
+};
+
 interface HeroSectionProps {
     withGenre?: boolean;
+    movie?: Movie;
 }
 
-export const HeroSection = ({ withGenre }: HeroSectionProps) => {
+export const HeroSection = ({ withGenre, movie }: HeroSectionProps) => {
     const [mutedVideo, setMutedVideo] = useState(true);
     const [detailSeriesDialog, setDetailSeriesDialog] = useState(false);
 
@@ -22,11 +40,15 @@ export const HeroSection = ({ withGenre }: HeroSectionProps) => {
     const location = useLocation();
     const pathname = location.pathname.toLowerCase();
 
-    const getLiveMovie = useCallback((id: number): Movie | undefined => {
-        return movies.find((m) => m.id === id);
+    const getLiveMovie = useCallback((id: number | string): Movie | undefined => {
+        return movies.find((m) => String(m.id) === String(id));
     }, [movies]);
 
     const heroData = useMemo(() => {
+        if (movie) return movie;
+
+        if (!movies || movies.length === 0) return fallbackData;
+
         if (pathname.includes('series')) {
             return getLiveMovie(19) || movies[0];
         } else if (pathname.includes('movies')) {
@@ -34,7 +56,7 @@ export const HeroSection = ({ withGenre }: HeroSectionProps) => {
         }
 
         return getLiveMovie(19) || movies[0];
-    }, [pathname, getLiveMovie, movies]);
+    }, [pathname, getLiveMovie, movies, movie]);
 
     return (
         <>
@@ -48,7 +70,7 @@ export const HeroSection = ({ withGenre }: HeroSectionProps) => {
                     muted={mutedVideo}
                     playsInline
                 >
-                    <source src={heroData.trailerUrl || "/trailer.mp4"} type="video/mp4" />
+                    <source src={heroData.trailerUrl} type="video/mp4" />
                 </video>
 
                 <div className='absolute z-20 w-full bottom-5 md:bottom-10 lg:bottom-14 left-0 px-6 md:px-10 lg:px-20 flex flex-col gap-3 lg:gap-10'>
@@ -107,7 +129,7 @@ export const HeroSection = ({ withGenre }: HeroSectionProps) => {
                                 <span>Selengkapnya</span>
                             </button>
                             <span className='bg-transparent border border-secondary size-9 md:size-13 flex items-center justify-center text-xs md:text-lg aspect-square rounded-full font-bold'>
-                                18+
+                                {heroData.ageRating}
                             </span>
                         </div>
 
@@ -126,7 +148,7 @@ export const HeroSection = ({ withGenre }: HeroSectionProps) => {
             </section>
 
             <PopupDetail
-                movie={heroData}
+                movieId={heroData.id}
                 open={detailSeriesDialog}
                 onOpenChange={setDetailSeriesDialog}
             />

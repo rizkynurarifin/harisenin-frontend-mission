@@ -1,19 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../components/atoms/Button";
 import { InputInsetLabel } from "../components/atoms/InputInsetLabel";
 import { ProfileHeader } from "../components/molecules/ProfileHeader";
 import { SubscriptionCard } from "../components/molecules/SubscriptionCard";
 import { MovieSection } from "../components/templates/MovieSection";
-import { ALL_CONTENT } from "../const/movies";
 import { useAuthStore } from "../store/useAuthStore";
+import { useMovieStore } from "../store/useMovieStore";
+import { ProfileSkeleton } from "../components/templates/ProfileSkeleton";
 
 const Profile = () => {
     const { user, updateProfile } = useAuthStore();
+    const { movies, fetchMovies, isLoading } = useMovieStore();
+
+    useEffect(() => {
+        if (movies.length === 0) {
+            fetchMovies();
+        }
+    }, [fetchMovies, movies.length]);
 
     const myMovies = user?.myList
         ? [...user.myList]
             .reverse()
-            .map((id) => ALL_CONTENT[id])
+            .map((id) => movies.find((m) => String(m.id) === String(id)))
             .filter((movie) => movie !== undefined)
         : [];
 
@@ -35,6 +43,10 @@ const Profile = () => {
         updateProfile(formData);
         alert("Profil berhasil diperbarui!");
     };
+
+    if (isLoading) {
+        return <ProfileSkeleton />;
+    }
 
     return (
         <div key={user?.username}>

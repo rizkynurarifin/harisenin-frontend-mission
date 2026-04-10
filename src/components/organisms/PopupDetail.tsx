@@ -1,24 +1,66 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import { useState, useRef } from 'react';
-import { BiPlus } from 'react-icons/bi';
+import { useState, useRef, useMemo } from 'react';
+import { BiCheck, BiPlus } from 'react-icons/bi';
 import { MdVolumeOff, MdVolumeUp } from 'react-icons/md';
 import { RxCross2 } from "react-icons/rx";
 import { MovieBadge } from '../atoms/MovieBadge';
-import { NEW_RELEASE_MOVIES, type Movie } from '../../const/movies';
+import { useMovieStore } from '../../store/useMovieStore';
+import { useAuthStore } from '../../store/useAuthStore';
 
 interface PopupDetailProps {
-    movie: Movie | null;
+    movieId: string | number | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }
 
-export const PopupDetail = ({ movie, open, onOpenChange }: PopupDetailProps) => {
+const formatDuration = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+
+    if (hours > 0) {
+        return remainingMinutes > 0 ? `${hours}j ${remainingMinutes}m` : `${hours}j`;
+    }
+    return `${remainingMinutes}m`;
+};
+
+export const PopupDetail = ({ movieId, open, onOpenChange }: PopupDetailProps) => {
+    const movies = useMovieStore((state) => state.movies);
     const [mutedVideo, setMutedVideo] = useState(true);
     const videoRef = useRef<HTMLVideoElement>(null);
 
-    const movieRecommendations = NEW_RELEASE_MOVIES
-        .filter(item => item.type === 'movie' && item.id !== movie?.id)
-        .slice(0, 3);
+    const user = useAuthStore((state) => state.user);
+    const addToMyList = useAuthStore((state) => state.addToMyList);
+    const removeFromMyList = useAuthStore((state) => state.removeFromMyList);
+
+    const movie = useMemo(() => {
+        return movies.find((m) => m.id === movieId);
+    }, [movies, movieId]);
+
+    const isInMyList = useMemo(() => {
+        if (!user || !movie) return false;
+        return user.myList?.some(id => id === movie.id) ?? false;
+    }, [user, movie]);
+
+    const handleToggleMyList = () => {
+        if (!movie) return;
+        if (!user) {
+            alert("Silakan login terlebih dahulu untuk menambah ke Daftar Saya!");
+            return;
+        }
+
+        if (isInMyList) {
+            removeFromMyList(movie.id);
+        } else {
+            addToMyList(movie.id);
+        }
+    };
+
+    const recommendations = useMemo(() => {
+        if (!movie) return [];
+        return movies
+            .filter((m) => m.id !== movie.id && m.genres.some(g => movie.genres.includes(g)))
+            .slice(0, 3);
+    }, [movies, movie]);
 
     if (!movie) return null;
 
@@ -38,8 +80,6 @@ export const PopupDetail = ({ movie, open, onOpenChange }: PopupDetailProps) => 
         isPremium,
         type
     } = movie;
-
-    if (!movie) return null;
 
     return (
         <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -65,7 +105,7 @@ export const PopupDetail = ({ movie, open, onOpenChange }: PopupDetailProps) => 
                                 muted={mutedVideo}
                                 playsInline
                             >
-                                <source src={trailerUrl || "/trailer.mp4"} type="video/mp4" />
+                                <source src={trailerUrl} type="video/mp4" />
                             </video>
 
                             <div className='absolute z-20 w-full bottom-5 md:bottom-10 lg:bottom-14 left-0 px-5 md:px-10 lg:px-20 flex flex-col gap-2 lg:gap-6'>
@@ -77,10 +117,13 @@ export const PopupDetail = ({ movie, open, onOpenChange }: PopupDetailProps) => 
                                             Mulai
                                         </button>
                                         <button
-                                            aria-label="Tambah ke daftar saya"
-                                            className='bg-transparent border border-secondary py-1 px-1 md:py-2.5 md:px-2.5 rounded-full shrink-0 grow-0 size-8 md:size-11 flex items-center justify-center cursor-pointer transition-all duration-200 active:scale-95 outline-none'
+                                            onClick={handleToggleMyList}
+                                            className="bg-transparent border border-secondary py-1 px-1 md:py-2.5 md:px-2.5 rounded-full shrink-0 grow-0 size-8 md:size-11 flex items-center justify-center cursor-pointer transition-all duration-200 active:scale-95 outline-none"
                                         >
-                                            <BiPlus className='text-lg md:text-2xl shrink-0 grow-0 text-white' />
+                                            {isInMyList ?
+                                                <BiCheck className="text-lg md:text-2xl shrink-0 grow-0 text-white" /> :
+                                                <BiPlus className="text-lg md:text-2xl shrink-0 grow-0 text-white" />
+                                            }
                                         </button>
                                         {isPremium && (
                                             <MovieBadge type="premium" isLandscape={true} />
@@ -103,7 +146,12 @@ export const PopupDetail = ({ movie, open, onOpenChange }: PopupDetailProps) => 
                                 <div className='grid gap-1'>
                                     <div className='flex items-center gap-1.25 lg:gap-4 lg:py-1 font-semibold text-xs md:text-sm lg:text-base'>
                                         <p>{year}</p>
-                                        <p>{type === 'series' ? `${totalEpisodes} Episode` : duration}</p>
+                                        <p>
+                                            {type === 'series'
+                                                ? `${totalEpisodes} Episode`
+                                                : formatDuration(duration)
+                                            }
+                                        </p>
                                         <div className='shrink-0 grow-0 size-6 lg:size-10 rounded-full border border-text-light-secondary flex items-center justify-center text-[10px] lg:text-sm font-bold'>
                                             {ageRating}
                                         </div>
@@ -180,7 +228,7 @@ export const PopupDetail = ({ movie, open, onOpenChange }: PopupDetailProps) => 
                                     <>
                                         <h3 className='font-bold text-xs lg:text-2xl text-text-light-primary mb-4 lg:mb-7'>Rekomendasi Serupa</h3>
                                         <div className='grid grid-cols-3 gap-2 md:gap-4 lg:gap-7'>
-                                            {movieRecommendations.map((rec) => (
+                                            {recommendations.map((rec) => (
                                                 <div
                                                     key={rec.id}
                                                     className="relative group cursor-pointer overflow-hidden rounded-md aspect-2/3 bg-greyscale-900"
