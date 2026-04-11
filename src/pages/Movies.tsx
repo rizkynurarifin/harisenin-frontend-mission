@@ -3,9 +3,10 @@ import { HeroSection } from "../components/organisms/HeroSection";
 import { MovieSection } from "../components/templates/MovieSection";
 import { useMovieStore } from "../store/useMovieStore";
 import { PageSkeleton } from "../components/templates/PageSkeleton";
+import { ServerError } from "./ServerError";
 
 const Movies = () => {
-    const { movies, fetchMovies, isLoading } = useMovieStore();
+    const { movies, fetchMovies, isLoading, error } = useMovieStore();
 
     useEffect(() => {
         if (movies.length === 0) {
@@ -47,13 +48,17 @@ const Movies = () => {
             .slice(0, 6),
         [allMovies]);
 
-    if (isLoading) {
+    if (isLoading && allMovies.length === 0) {
         return <PageSkeleton withGenre={true} />;
+    }
+
+    if (error && allMovies.length === 0) {
+        return <ServerError message={error} onRetry={fetchMovies} />;
     }
 
     return (
         <>
-            <HeroSection withGenre />
+            <HeroSection withGenre movie={trending[0] || allMovies[0]} />
 
             {continueWatching.length > 0 && (
                 <MovieSection
@@ -64,23 +69,29 @@ const Movies = () => {
                 />
             )}
 
-            <MovieSection
-                title="Film Persembahan Chill"
-                movies={chillExclusiveMovies}
-                variant="portrait"
-            />
+            {chillExclusiveMovies.length > 0 && (
+                <MovieSection
+                    title="Film Persembahan Chill"
+                    movies={chillExclusiveMovies}
+                    variant="portrait"
+                />
+            )}
 
-            <MovieSection
-                title="Top Rating Film Hari ini"
-                movies={topRating}
-                variant="portrait"
-            />
+            {topRating.length > 0 && (
+                <MovieSection
+                    title="Top Rating Film Hari ini"
+                    movies={topRating}
+                    variant="portrait"
+                />
+            )}
 
-            <MovieSection
-                title="Film Trending"
-                movies={trending}
-                variant="portrait"
-            />
+            {trending.length > 0 && (
+                <MovieSection
+                    title="Film Trending"
+                    movies={trending}
+                    variant="portrait"
+                />
+            )}
 
             <MovieSection
                 title="Rilis Baru"

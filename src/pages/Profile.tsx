@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "../components/atoms/Button";
 import { InputInsetLabel } from "../components/atoms/InputInsetLabel";
 import { ProfileHeader } from "../components/molecules/ProfileHeader";
@@ -7,10 +7,11 @@ import { MovieSection } from "../components/templates/MovieSection";
 import { useAuthStore } from "../store/useAuthStore";
 import { useMovieStore } from "../store/useMovieStore";
 import { ProfileSkeleton } from "../components/templates/ProfileSkeleton";
+import type { Movie } from "../const/movies";
 
 const Profile = () => {
     const { user, updateProfile } = useAuthStore();
-    const { movies, fetchMovies, isLoading } = useMovieStore();
+    const { movies, fetchMovies, isLoading, error } = useMovieStore();
 
     useEffect(() => {
         if (movies.length === 0) {
@@ -18,12 +19,15 @@ const Profile = () => {
         }
     }, [fetchMovies, movies.length]);
 
-    const myMovies = user?.myList
-        ? [...user.myList]
+    const myMovies = useMemo<Movie[]>(() => {
+        const userList = user?.myList;
+        if (!userList) return [];
+
+        return [...userList]
             .reverse()
-            .map((id) => movies.find((m) => String(m.id) === String(id)))
-            .filter((movie) => movie !== undefined)
-        : [];
+            .map((id) => movies.find((m) => m.id === id))
+            .filter((movie): movie is Movie => !!movie);
+    }, [user?.myList, movies]);
 
     const [formData, setFormData] = useState({
         username: user?.username || "",
@@ -44,7 +48,7 @@ const Profile = () => {
         alert("Profil berhasil diperbarui!");
     };
 
-    if (isLoading) {
+    if (isLoading && movies.length === 0) {
         return <ProfileSkeleton />;
     }
 
@@ -114,13 +118,25 @@ const Profile = () => {
                 </div>
             </form>
 
-            <MovieSection
-                title="Daftar Saya"
-                movies={myMovies}
-                variant="portrait"
-                isGrid={true}
-                className="-mt-5 lg:-mt-10"
-            />
+            {error && movies.length === 0 ? (
+                <div className="flex flex-col items-center py-10 gap-3">
+                    <p className="text-red-500">Gagal memuat daftar tontonan.</p>
+                    <button
+                        onClick={fetchMovies}
+                        className="text-white underline text-sm"
+                    >
+                        Coba Lagi
+                    </button>
+                </div>
+            ) : (
+                <MovieSection
+                    title="Daftar Saya"
+                    movies={myMovies}
+                    variant="portrait"
+                    isGrid={true}
+                    className="-mt-5 lg:-mt-10"
+                />
+            )}
         </div>
     );
 };

@@ -16,6 +16,7 @@ import Dashboard from './pages/admin/Dashboard';
 import CreateMovie from './pages/admin/CreateMovie';
 import EditMovie from './pages/admin/EditMovie';
 import { NotFound } from './pages/NotFound';
+import { ServerError } from './pages/ServerError';
 
 const router = createBrowserRouter([
     { path: "login", element: <Login /> },
@@ -24,6 +25,7 @@ const router = createBrowserRouter([
     {
         path: "/",
         element: <MainLayout />,
+        errorElement: <ServerError />,
         children: [
             { index: true, element: <Home /> },
             { path: "series", element: <Series /> },

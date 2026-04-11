@@ -3,9 +3,10 @@ import { HeroSection } from "../components/organisms/HeroSection";
 import { MovieSection } from "../components/templates/MovieSection";
 import { useMovieStore } from "../store/useMovieStore";
 import { PageSkeleton } from "../components/templates/PageSkeleton";
+import { ServerError } from "./ServerError";
 
 const Home = () => {
-    const { movies, fetchMovies, isLoading } = useMovieStore();
+    const { movies, fetchMovies, isLoading, error } = useMovieStore();
 
     useEffect(() => {
         if (movies.length === 0) {
@@ -37,8 +38,12 @@ const Home = () => {
             .slice(0, 6),
         [movies]);
 
-    if (isLoading) {
+    if (isLoading && movies.length === 0) {
         return <PageSkeleton />;
+    }
+
+    if (error && movies.length === 0) {
+        return <ServerError message={error} onRetry={fetchMovies} />;
     }
 
     return (
@@ -54,17 +59,21 @@ const Home = () => {
                 />
             )}
 
-            <MovieSection
-                title="Top Rating Film dan Series Hari ini"
-                movies={topRating}
-                variant="portrait"
-            />
+            {topRating.length > 0 && (
+                <MovieSection
+                    title="Top Rating Film dan Series Hari ini"
+                    movies={topRating}
+                    variant="portrait"
+                />
+            )}
 
-            <MovieSection
-                title="Film dan Series Trending"
-                movies={trending}
-                variant="portrait"
-            />
+            {trending.length > 0 && (
+                <MovieSection
+                    title="Film dan Series Trending"
+                    movies={trending}
+                    variant="portrait"
+                />
+            )}
 
             <MovieSection
                 title="Rilis Baru"
