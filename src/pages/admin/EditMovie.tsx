@@ -3,7 +3,11 @@ import { useNavigate, useParams, Navigate } from "react-router-dom";
 import { useMovieStore } from "../../store/useMovieStore";
 import { Button } from "../../components/atoms/Button";
 import { genreList } from "../../const/genre";
-import type { Movie, MovieType, SeriesType } from "../../const/movies";
+import type { EpisodeDetail, Movie, MovieType, SeriesType } from "../../const/movies";
+import { FormField } from "../../components/molecules/FormField";
+import { FormLabel } from "../../components/atoms/FormLabel";
+import { FileUpload } from "../../components/molecules/FileUpload";
+import { FormSwitch } from "../../components/molecules/FormSwitch";
 
 export const EditMovie = () => {
     const { id } = useParams<{ id: string }>();
@@ -11,7 +15,7 @@ export const EditMovie = () => {
     const movies = useMovieStore((state) => state.movies);
     const updateMovie = useMovieStore((state) => state.updateMovie);
 
-    const movieToEdit = movies.find((m) => m.id === Number(id));
+    const movieToEdit = movies.find((m) => m.id === id);
 
     const [formData, setFormData] = useState(() => {
         if (!movieToEdit) return null;
@@ -29,18 +33,68 @@ export const EditMovie = () => {
             creators: movieToEdit.creators?.join(", ") || "",
             description: movieToEdit.description || "",
             trailerUrl: movieToEdit.trailerUrl || "",
+            isNewEpisode: (movieToEdit as SeriesType).isNewEpisode || false,
             isPremium: movieToEdit.isPremium || false,
             isTop10: movieToEdit.isTop10 || false,
         };
 
         if (movieToEdit.type === "movie") {
             const m = movieToEdit as MovieType;
-            return { ...base, duration: m.duration, totalEpisodes: 0 };
+            return {
+                ...base,
+                duration: m.duration,
+                totalEpisodes: 0,
+                episodes: [] as EpisodeDetail[]
+            };
         } else {
             const s = movieToEdit as SeriesType;
-            return { ...base, totalEpisodes: s.totalEpisodes, duration: "" };
+            return {
+                ...base,
+                totalEpisodes: s.totalEpisodes,
+                duration: 0,
+                episodes: s.episodes || []
+            };
         }
     });
+
+    const addEpisode = () => {
+        setFormData(prev => {
+            if (!prev) return null;
+
+            const newEpisodeNumber = prev.episodes.length + 1;
+            const newEpisode: EpisodeDetail = {
+                id: Date.now(),
+                episodeNumber: newEpisodeNumber,
+                title: `Episode ${newEpisodeNumber}`,
+                duration: 0,
+                description: "",
+                thumbnail: "",
+                progress: 0,
+            };
+
+            return {
+                ...prev,
+                episodes: [...prev.episodes, newEpisode]
+            };
+        });
+    };
+
+    const removeEpisode = (id: number) => {
+        setFormData(prev => {
+            if (!prev || prev.episodes.length <= 1) return prev;
+
+            const filtered = prev.episodes.filter(ep => ep.id !== id);
+            const reIndexed = filtered.map((ep, idx) => ({
+                ...ep,
+                episodeNumber: idx + 1
+            }));
+
+            return {
+                ...prev,
+                episodes: reIndexed
+            };
+        });
+    };
 
     if (!movieToEdit || !formData) {
         return <Navigate to="/admin" replace />;
@@ -56,22 +110,49 @@ export const EditMovie = () => {
         });
     };
 
+    const handleArrayInput = (value: string, field: "casts" | "creators") => {
+        const arrayValue = value.split(",").map((item) => item.trim());
+        setFormData((prev) => prev ? { ...prev, [field]: arrayValue } : null);
+    };
+
+    const handleNumberInput = (value: string, field: string) => {
+        const numValue = value === "" ? 0 : parseFloat(value);
+        setFormData((prev) => prev ? { ...prev, [field]: numValue } : null);
+    };
+
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, field: "thumbnail" | "thumbnailLandscape") => {
         const file = e.target.files?.[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setFormData(prev => prev ? { ...prev, [field]: reader.result as string } : null);
+                const img = new Image();
+                img.src = reader.result as string;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = field === "thumbnail" ? 300 : 600;
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    setFormData(prev => {
+                        if (!prev) return null;
+                        return { ...prev, [field]: compressedBase64 };
+                    });
+                };
             };
             reader.readAsDataURL(file);
         }
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const commonData = {
-            id: Number(id),
+        const baseData = {
             title: formData.title,
             year: formData.year,
             thumbnail: formData.thumbnail,
@@ -79,33 +160,55 @@ export const EditMovie = () => {
             rating: formData.rating,
             ageRating: formData.ageRating,
             genres: formData.genres,
-            casts: formData.casts.split(",").map(c => c.trim()).filter(c => c !== ""),
-            creators: formData.creators.split(",").map(c => c.trim()).filter(c => c !== ""),
+            casts: formData.casts.split(",").map((item) => item.trim()).filter(c => c !== ""),
+            creators: formData.creators.split(",").map((item) => item.trim()).filter(c => c !== ""),
             description: formData.description,
             trailerUrl: formData.trailerUrl,
+            isNewEpisode: formData.isNewEpisode,
             isPremium: formData.isPremium,
             isTop10: formData.isTop10,
+            progress: movieToEdit.progress || 0,
         };
 
-        let updatedMovie: Movie;
+        let payload: Movie;
+
         if (formData.type === "movie") {
-            updatedMovie = {
-                ...commonData,
+            payload = {
+                ...baseData,
+                id: id!,
                 type: "movie",
-                duration: formData.duration
+                duration: Number(formData.duration),
             } as MovieType;
         } else {
-            updatedMovie = {
-                ...commonData,
+            const optimizedEpisodes = formData.episodes.map((ep, index) => {
+                const sequence = (index + 1).toString().padStart(2, '0');
+                return {
+                    ...ep,
+                    id: Number(`${Date.now().toString().slice(-4)}${sequence}`),
+                    title: ep.title || `Episode ${index + 1}`,
+                    thumbnail: ep.thumbnail || "",
+                    description: ep.description || "",
+                };
+            });
+
+            payload = {
+                ...baseData,
+                id: id!,
                 type: "series",
-                totalEpisodes: formData.totalEpisodes,
-                episodes: (movieToEdit as SeriesType).episodes || []
+                totalEpisodes: Number(formData.totalEpisodes),
+                episodes: optimizedEpisodes,
+                lastWatchedEpisodeId: (movieToEdit as SeriesType).lastWatchedEpisodeId || optimizedEpisodes[0]?.id || 1,
             } as SeriesType;
         }
 
-        updateMovie(updatedMovie);
-        alert("Konten berhasil diperbarui!");
-        navigate("/admin");
+        try {
+            await updateMovie(id!, payload);
+            alert("Konten Berhasil Diperbarui!");
+            navigate("/admin");
+        } catch (error) {
+            console.error("Gagal update:", error);
+            alert("Terjadi kesalahan saat memperbarui konten.");
+        }
     };
 
     return (
@@ -129,129 +232,114 @@ export const EditMovie = () => {
 
                 {/* Judul & Tipe */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
-                    <div className="space-y-2">
-                        <label className="text-xs md:text-sm font-bold text-secondary uppercase tracking-wider">Judul Konten</label>
-                        <input
-                            required
-                            type="text"
-                            className="w-full bg-white/5 border border-white/10 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none text-sm transition-all"
-                            placeholder="Contoh: All of Us Are Dead"
-                            value={formData.title}
-                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-xs md:text-sm font-bold text-secondary uppercase tracking-wider">Tipe Konten</label>
-                        <select
-                            className="w-full bg-[#2d2f31] border border-white/10 rounded-lg p-3 outline-none cursor-pointer text-sm"
-                            value={formData.type}
-                            onChange={(e) => setFormData({ ...formData, type: e.target.value as "movie" | "series" })}
-                        >
-                            <option value="movie">Movie</option>
-                            <option value="series">Series</option>
-                        </select>
-                    </div>
+                    <FormField
+                        label="Judul Konten"
+                        placeholder="Contoh: All of Us Are Dead"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    />
+
+                    <FormField
+                        label="Tipe Konten"
+                        as="select"
+                        value={formData.type}
+                        disabled={!!id}
+                        onChange={(e) => setFormData({ ...formData, type: e.target.value as "movie" | "series" })}
+                    >
+                        <option value="movie" className="bg-zinc-900 text-white">Movie</option>
+                        <option value="series" className="bg-zinc-900 text-white">Series</option>
+                    </FormField>
                 </div>
 
                 {/* Trailer & Metadata */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
-                    <div className="space-y-2">
-                        <label className="text-xs md:text-sm font-bold text-secondary uppercase tracking-wider">Trailer URL (YouTube)</label>
-                        <input
-                            type="text"
-                            className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none text-sm focus:ring-2 focus:ring-blue-500 transition-all"
-                            placeholder="https://youtube.com/watch?v=..."
-                            value={formData.trailerUrl}
-                            onChange={(e) => setFormData({ ...formData, trailerUrl: e.target.value })}
-                        />
-                    </div>
+                    <FormField
+                        label="Trailer URL"
+                        value={formData.trailerUrl}
+                        onChange={(e) => setFormData({ ...formData, trailerUrl: e.target.value })}
+                    />
+
                     <div className="grid grid-cols-3 gap-3 md:gap-4">
-                        <div className="space-y-2">
-                            <label className="text-[10px] md:text-xs font-bold text-secondary uppercase tracking-wider">Tahun</label>
-                            <input
-                                type="number"
-                                className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none text-sm"
-                                value={formData.year}
-                                onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] md:text-xs font-bold text-secondary uppercase tracking-wider">Rating</label>
-                            <input
-                                type="text"
-                                className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none text-sm"
-                                placeholder="4.5"
-                                value={formData.rating}
-                                onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] md:text-xs font-bold text-secondary uppercase tracking-wider">Usia</label>
-                            <select
-                                className="w-full bg-[#2d2f31] border border-white/10 rounded-lg p-3 outline-none cursor-pointer text-sm"
-                                value={formData.ageRating}
-                                onChange={(e) => setFormData({ ...formData, ageRating: e.target.value })}
-                            >
-                                <option value="SU">SU</option>
-                                <option value="13+">13+</option>
-                                <option value="18+">18+</option>
-                            </select>
-                        </div>
+                        <FormField
+                            label="Tahun"
+                            type="number"
+                            value={formData.year}
+                            onChange={(e) => handleNumberInput(e.target.value, "year")}
+                        />
+                        <FormField
+                            label="Rating"
+                            type="number"
+                            step="0.1"
+                            min="0"
+                            max="5"
+                            value={formData.rating || ""}
+                            onChange={(e) => handleNumberInput(e.target.value, "rating")}
+                        />
+                        <FormField
+                            label="Usia"
+                            as="select"
+                            value={formData.ageRating}
+                            onChange={(e) => setFormData({ ...formData, ageRating: e.target.value })}
+                        >
+                            <option value="SU" className="bg-zinc-900 text-white">SU</option>
+                            <option value="13+" className="bg-zinc-900 text-white">13+</option>
+                            <option value="18+" className="bg-zinc-900 text-white">18+</option>
+                        </FormField>
                     </div>
                 </div>
 
                 {/* Casts, Creators & Duration */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
-                    <div className="space-y-2">
-                        <label className="text-xs md:text-sm font-bold text-secondary uppercase tracking-wider">
-                            Pemeran
-                        </label>
-                        <input
-                            type="text"
-                            className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none text-sm focus:ring-2 focus:ring-blue-500 transition-all"
-                            placeholder="Pisahkan dengan koma..."
-                            value={formData.casts}
-                            onChange={(e) => setFormData({ ...formData, casts: e.target.value })}
-                        />
-                    </div>
+                    <FormField
+                        label="Pemeran"
+                        placeholder="Pisahkan dengan koma (Contoh: Leo, Jennifer)"
+                        value={Array.isArray(formData.casts) ? formData.casts.join(", ") : formData.casts}
+                        onChange={(e) => id ? setFormData({ ...formData, casts: e.target.value }) : handleArrayInput(e.target.value, "casts")}
+                    />
 
-                    <div className="space-y-2">
-                        <label className="text-xs md:text-sm font-bold text-secondary uppercase tracking-wider">
-                            Sutradara
-                        </label>
-                        <input
-                            type="text"
-                            className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none text-sm focus:ring-2 focus:ring-blue-500 transition-all"
-                            placeholder="Pisahkan dengan koma..."
-                            value={formData.creators}
-                            onChange={(e) => setFormData({ ...formData, creators: e.target.value })}
-                        />
-                    </div>
+                    <FormField
+                        label="Sutradara"
+                        placeholder="Pisahkan dengan koma (Contoh: Leo, Jennifer)"
+                        value={Array.isArray(formData.creators) ? formData.creators.join(", ") : formData.creators}
+                        onChange={(e) => id ? setFormData({ ...formData, creators: e.target.value }) : handleArrayInput(e.target.value, "creators")}
+                    />
 
-                    <div className="space-y-2">
-                        <label className="text-xs md:text-sm font-bold text-secondary uppercase tracking-wider">
-                            {formData.type === "movie" ? "Durasi Film" : "Total Episode"}
-                        </label>
-                        <input
-                            type={formData.type === "movie" ? "text" : "number"}
-                            className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none text-sm focus:ring-2 focus:ring-blue-500 transition-all"
-                            placeholder={formData.type === "movie" ? "1j 30m" : "12"}
-                            value={formData.type === "movie" ? formData.duration : formData.totalEpisodes}
-                            onChange={(e) => setFormData({
-                                ...formData,
-                                [formData.type === "movie" ? "duration" : "totalEpisodes"]: e.target.value
-                            })}
-                        />
-                    </div>
+                    <FormField
+                        label={formData.type === "movie" ? "Durasi (Menit)" : "Total Episode"}
+                        type="number"
+                        placeholder="Contoh: 120"
+                        value={
+                            formData.type === "movie"
+                                ? (formData.duration || "")
+                                : (formData.totalEpisodes || "")
+                        }
+                        onChange={(e) =>
+                            handleNumberInput(
+                                e.target.value,
+                                formData.type === "movie" ? "duration" : "totalEpisodes"
+                            )
+                        }
+                    />
                 </div>
 
                 {/* Genre Selection */}
                 <div className="space-y-3">
-                    <label className="text-xs md:text-sm font-bold text-secondary uppercase tracking-wider">Pilih Genre</label>
+                    <FormLabel>Pilih Genre</FormLabel>
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 md:gap-3">
                         {genreList.map((genre) => (
-                            <label key={genre} className={`flex items-center justify-center text-center p-2 rounded-lg border transition-all cursor-pointer text-[9px] md:text-[10px] uppercase font-bold tracking-wider ${formData.genres.includes(genre) ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/20' : 'bg-white/5 border-white/10 text-secondary'}`}>
-                                <input type="checkbox" className="hidden" checked={formData.genres.includes(genre)} onChange={() => handleGenreChange(genre)} />
+                            <label
+                                key={genre}
+                                className={`flex items-center justify-center text-center p-2 rounded-lg border transition-all cursor-pointer text-[9px] md:text-[10px] uppercase font-bold tracking-wider ${formData.genres.includes(genre)
+                                    ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/20'
+                                    : 'bg-white/5 border-white/10 text-secondary'
+                                    }`}
+                            >
+                                <input
+                                    type="checkbox"
+                                    className="hidden"
+                                    checked={formData.genres.includes(genre)}
+                                    onChange={() => handleGenreChange(genre)}
+                                />
                                 {genre}
                             </label>
                         ))}
@@ -259,68 +347,114 @@ export const EditMovie = () => {
                 </div>
 
                 {/* Deskripsi */}
-                <div className="space-y-2">
-                    <label className="text-xs md:text-sm font-bold text-secondary uppercase tracking-wider">Sinopsis / Deskripsi</label>
-                    <textarea
-                        rows={4}
-                        className="w-full bg-white/5 border border-white/10 rounded-lg p-3 outline-none resize-none text-sm"
-                        placeholder="Tulis deskripsi singkat..."
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    />
-                </div>
+                <FormField
+                    label="Sinopsis / Deskripsi"
+                    as="textarea"
+                    rows={4}
+                    placeholder="Tulis deskripsi singkat..."
+                    className="resize-none"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                />
+
+                {/* Episode Detail (Hanya muncul jika tipe Series) */}
+                {formData.type === "series" && (
+                    <div className="space-y-6 p-6 rounded-xl bg-white/5 border border-blue-500/20 shadow-inner">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <div className="w-1 h-5 bg-blue-500 rounded-full"></div>
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-blue-400">Daftar Episode</h3>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={addEpisode}
+                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[10px] font-bold uppercase transition-all"
+                            >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                Tambah Episode
+                            </button>
+                        </div>
+
+                        <div className="space-y-4 max-h-100 overflow-y-auto pr-2 custom-scrollbar">
+                            {formData.episodes.map((episode, index) => (
+                                <div key={episode.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 bg-white/5 rounded-lg border border-white/10 relative group">
+                                    <div className="md:col-span-1 flex items-center justify-center font-bold text-secondary">
+                                        #{index + 1}
+                                    </div>
+
+                                    <div className="md:col-span-6">
+                                        <FormField
+                                            label="Judul Episode"
+                                            placeholder="Contoh: Awal Mula"
+                                            value={episode.title}
+                                            onChange={(e) => {
+                                                const newEpisodes = [...formData.episodes];
+                                                newEpisodes[index].title = e.target.value;
+                                                setFormData({ ...formData, episodes: newEpisodes });
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div className="md:col-span-4">
+                                        <FormField
+                                            label="Durasi (Menit)"
+                                            type="number"
+                                            value={episode.duration || ""}
+                                            onChange={(e) => {
+                                                const newEpisodes = [...formData.episodes];
+                                                newEpisodes[index].duration = Number(e.target.value);
+                                                setFormData({ ...formData, episodes: newEpisodes });
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div className="md:col-span-1 flex items-end pb-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => removeEpisode(episode.id)}
+                                            className={`p-2 rounded-lg transition-colors ${formData.episodes.length > 1 ? 'text-red-500 hover:bg-red-500/10' : 'text-gray-600 cursor-not-allowed'}`}
+                                            disabled={formData.episodes.length <= 1}
+                                        >
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Thumbnail Uploads */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-6">
-                    <div className="space-y-3">
-                        <label className="text-xs md:text-sm font-bold text-secondary uppercase tracking-wider">Thumbnail Portrait (2:3)</label>
-                        <div className="relative group aspect-2/3 sm:h-64 w-full bg-white/5 border border-dashed border-white/20 rounded-xl flex flex-col items-center justify-center overflow-hidden hover:border-blue-500 transition-all">
-                            {formData.thumbnail ? (
-                                <img src={formData.thumbnail} className="w-full h-full object-cover" alt="Preview" />
-                            ) : (
-                                <div className="text-center p-4">
-                                    <svg className="mx-auto h-8 w-8 text-secondary/50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
-                                    <span className="text-[9px] text-secondary uppercase font-black">Upload Portrait</span>
-                                </div>
-                            )}
-                            <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileUpload(e, "thumbnail")} />
-                        </div>
-                    </div>
-
-                    <div className="space-y-3">
-                        <label className="text-xs md:text-sm font-bold text-secondary uppercase tracking-wider">Thumbnail Landscape (16:9)</label>
-                        <div className="relative group aspect-video sm:h-64 w-full bg-white/5 border border-dashed border-white/20 rounded-xl flex flex-col items-center justify-center overflow-hidden hover:border-blue-500 transition-all">
-                            {formData.thumbnailLandscape ? (
-                                <img src={formData.thumbnailLandscape} className="w-full h-full object-cover" alt="Preview" />
-                            ) : (
-                                <div className="text-center p-4">
-                                    <svg className="mx-auto h-8 w-8 text-secondary/50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                    <span className="text-[9px] text-secondary uppercase font-black">Upload Landscape</span>
-                                </div>
-                            )}
-                            <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileUpload(e, "thumbnailLandscape")} />
-                        </div>
-                    </div>
+                    <FileUpload
+                        label="Thumbnail Portrait"
+                        value={formData.thumbnail}
+                        aspectRatio="aspect-2/3"
+                        onChange={(e) => handleFileUpload(e, "thumbnail")}
+                    />
+                    <FileUpload
+                        label="Thumbnail Landscape"
+                        value={formData.thumbnailLandscape}
+                        aspectRatio="aspect-video"
+                        onChange={(e) => handleFileUpload(e, "thumbnailLandscape")}
+                    />
                 </div>
 
                 {/* Switch Options */}
                 <div className="flex flex-col sm:flex-row gap-5 sm:gap-10 py-6 border-t border-white/10">
-                    <label className="flex items-center gap-3 cursor-pointer group">
-                        <div className="relative">
-                            <input type="checkbox" className="sr-only" checked={formData.isPremium} onChange={(e) => setFormData({ ...formData, isPremium: e.target.checked })} />
-                            <div className={`w-10 h-5 rounded-full transition-colors ${formData.isPremium ? 'bg-blue-600' : 'bg-white/10'}`}></div>
-                            <div className={`absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform ${formData.isPremium ? 'translate-x-5' : 'translate-x-0'}`}></div>
-                        </div>
-                        <span className="text-xs font-bold text-secondary uppercase tracking-widest">Konten Premium</span>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer group">
-                        <div className="relative">
-                            <input type="checkbox" className="sr-only" checked={formData.isTop10} onChange={(e) => setFormData({ ...formData, isTop10: e.target.checked })} />
-                            <div className={`w-10 h-5 rounded-full transition-colors ${formData.isTop10 ? 'bg-red-600' : 'bg-white/10'}`}></div>
-                            <div className={`absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform ${formData.isTop10 ? 'translate-x-5' : 'translate-x-0'}`}></div>
-                        </div>
-                        <span className="text-xs font-bold text-secondary uppercase tracking-widest">Top 10 Hari Ini</span>
-                    </label>
+                    <FormSwitch
+                        label="Konten Premium"
+                        checked={formData.isPremium}
+                        activeColor="bg-blue-600"
+                        onChange={(val) => setFormData({ ...formData, isPremium: val })}
+                    />
+
+                    <FormSwitch
+                        label="Top 10 Hari Ini"
+                        checked={formData.isTop10}
+                        activeColor="bg-red-600"
+                        onChange={(val) => setFormData({ ...formData, isTop10: val })}
+                    />
                 </div>
 
                 {/* Actions */}
@@ -336,7 +470,7 @@ export const EditMovie = () => {
                     <Button
                         variant="primary"
                         type="submit"
-                        className="w-full sm:w-auto px-10 py-3.5 md:py-3 uppercase tracking-widest text-[10px] font-bold shadow-lg shadow-blue-600/20"
+                        className="w-full sm:w-auto px-10 py-3.5 md:py-3 uppercase tracking-widest text-[10px] font-bold"
                     >
                         Update Konten
                     </Button>

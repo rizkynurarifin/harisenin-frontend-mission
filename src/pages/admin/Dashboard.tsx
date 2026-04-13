@@ -1,18 +1,26 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useMovieStore } from "../../store/useMovieStore";
 import { Button } from "../../components/atoms/Button";
 import { genreList } from "../../const/genre";
+import { ServerError } from "../ServerError";
+import { IoAdd } from "react-icons/io5";
+import { TableSkeleton } from "../../components/templates/TableSkeleton";
 
 export const Dashboard = () => {
-    const movies = useMovieStore((state) => state.movies);
-    const deleteMovie = useMovieStore((state) => state.deleteMovie);
+    const { movies, fetchMovies, deleteMovie, isLoading, error } = useMovieStore();
 
     const [filterType, setFilterType] = useState("");
     const [filterYear, setFilterYear] = useState("");
     const [filterGenre, setFilterGenre] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+
+    useEffect(() => {
+        if (movies.length === 0) {
+            fetchMovies();
+        }
+    }, [fetchMovies, movies.length]);
 
     const filteredMovies = useMemo(() => {
         return movies
@@ -22,19 +30,27 @@ export const Dashboard = () => {
                 const matchesGenre = filterGenre ? movie.genres?.includes(filterGenre) : true;
                 return matchesType && matchesYear && matchesGenre;
             })
-            .sort((a, b) => a.id - b.id);
+            .sort((a, b) => Number(a.id) - Number(b.id));
     }, [movies, filterType, filterYear, filterGenre]);
 
+    if (isLoading && movies.length === 0) {
+        return <TableSkeleton />;
+    }
+
+    if (error && movies.length === 0) {
+        return <ServerError message={error} onRetry={fetchMovies} />;
+    }
+
+    // Logika Pagination
     const totalPages = Math.ceil(filteredMovies.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const paginatedMovies = filteredMovies.slice(startIndex, startIndex + itemsPerPage);
-
-    const displayedCount = paginatedMovies.length;
     const uniqueYears = Array.from(new Set(movies.map((m) => m.year))).sort((a, b) => b - a);
 
-    const handleDelete = (id: number) => {
+
+    const handleDelete = async (id: string) => {
         if (window.confirm("Apakah kamu yakin ingin menghapus konten ini?")) {
-            deleteMovie(id);
+            await deleteMovie(id);
         }
     };
 
@@ -44,19 +60,18 @@ export const Dashboard = () => {
                 <div>
                     <h1 className="text-2xl lg:text-3xl font-bold tracking-wide">Manajemen Konten</h1>
                     <p className="text-secondary text-sm mt-1">
-                        Menampilkan <span className="text-white font-bold">{displayedCount}</span> dari {filteredMovies.length} konten
+                        Menampilkan <span className="text-white font-bold">{paginatedMovies.length}</span> dari {filteredMovies.length} konten
                     </p>
                 </div>
 
-                <Link to="/admin/create" className="w-full md:w-auto">
-                    <Button variant="primary" className="w-full md:px-6 py-2.5 text-sm flex items-center justify-center gap-2">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                        Tambah Film / Series
-                    </Button>
-                </Link>
+                <Button
+                    to="/admin/create"
+                    variant="primary"
+                    className="w-full md:w-auto md:px-6 py-2.5 flex items-center justify-center gap-2"
+                >
+                    <IoAdd size={20} />
+                    Tambah Film / Series
+                </Button>
             </div>
 
             {/* Filter Section */}

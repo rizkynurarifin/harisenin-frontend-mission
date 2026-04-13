@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { MdVolumeUp, MdVolumeOff } from "react-icons/md";
 import { genreList } from '../../const/genre';
@@ -40,23 +40,21 @@ export const HeroSection = ({ withGenre, movie }: HeroSectionProps) => {
     const location = useLocation();
     const pathname = location.pathname.toLowerCase();
 
-    const getLiveMovie = useCallback((id: number | string): Movie | undefined => {
-        return movies.find((m) => String(m.id) === String(id));
-    }, [movies]);
-
     const heroData = useMemo(() => {
         if (movie) return movie;
 
         if (!movies || movies.length === 0) return fallbackData;
 
         if (pathname.includes('series')) {
-            return getLiveMovie(19) || movies[0];
-        } else if (pathname.includes('movies')) {
-            return getLiveMovie(6) || movies[0];
+            return movies.find(m => m.type === 'series') || movies[0];
+        } 
+        
+        if (pathname.includes('movies')) {
+            return movies.find(m => m.type === 'movie') || movies[0];
         }
 
-        return getLiveMovie(19) || movies[0];
-    }, [pathname, getLiveMovie, movies, movie]);
+        return movies[0];
+    }, [pathname, movies, movie]);
 
     return (
         <>
