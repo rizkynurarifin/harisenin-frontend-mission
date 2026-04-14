@@ -3,25 +3,29 @@ import { VideoControllerBar } from '../components/organisms/VideoControllerBar';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PremiumOverlay } from '../components/organisms/PremiumOverlay';
 import { useAuthStore } from '../store/useAuthStore';
-import { useMovieStore } from '../store/useMovieStore';
+import { useDispatch, useSelector } from 'react-redux';
+import type { AppDispatch, RootState } from '../store/redux/store';
+import { fetchMovies } from '../store/redux/movieSlice';
 
 export const MoviePlayer = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+
+    const dispatch = useDispatch<AppDispatch>();
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isPlaying, setIsPlaying] = useState(true);
 
-    const { movies, fetchMovies, isLoading } = useMovieStore();
+    const { movies, isLoading } = useSelector((state: RootState) => state.movieData);
     const isUserPremium = useAuthStore((state) => state.user?.isPremium ?? false);
 
     useEffect(() => {
         if (movies.length === 0) {
-            fetchMovies();
+            dispatch(fetchMovies());
         }
-    }, [fetchMovies, movies.length]);
+    }, [dispatch, movies.length]);
 
     const movie = useMemo(() => {
-        return movies.find((m) => String(m.id) === String(id));
+        return movies.find((m) => m.id === id);
     }, [movies, id]);
 
     const togglePlay = () => {

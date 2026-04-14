@@ -5,19 +5,23 @@ import { ProfileHeader } from "../components/molecules/ProfileHeader";
 import { SubscriptionCard } from "../components/molecules/SubscriptionCard";
 import { MovieSection } from "../components/templates/MovieSection";
 import { useAuthStore } from "../store/useAuthStore";
-import { useMovieStore } from "../store/useMovieStore";
 import { ProfileSkeleton } from "../components/templates/ProfileSkeleton";
 import type { Movie } from "../const/movies";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "../store/redux/store";
+import { fetchMovies } from "../store/redux/movieSlice";
 
 const Profile = () => {
+    const dispatch = useDispatch<AppDispatch>();
     const { user, updateProfile } = useAuthStore();
-    const { movies, fetchMovies, isLoading, error } = useMovieStore();
+
+    const { movies, isLoading, error } = useSelector((state: RootState) => state.movieData);
 
     useEffect(() => {
         if (movies.length === 0) {
-            fetchMovies();
+            dispatch(fetchMovies());
         }
-    }, [fetchMovies, movies.length]);
+    }, [dispatch, movies.length]);
 
     const myMovies = useMemo<Movie[]>(() => {
         const userList = user?.myList;
@@ -122,7 +126,7 @@ const Profile = () => {
                 <div className="flex flex-col items-center py-10 gap-3">
                     <p className="text-red-500">Gagal memuat daftar tontonan.</p>
                     <button
-                        onClick={fetchMovies}
+                        onClick={() => dispatch(fetchMovies())}
                         className="text-white underline text-sm"
                     >
                         Coba Lagi

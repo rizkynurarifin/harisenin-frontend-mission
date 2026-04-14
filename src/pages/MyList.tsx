@@ -2,19 +2,23 @@ import { useEffect, useMemo } from "react";
 import { MovieSection } from "../components/templates/MovieSection";
 import { useAuthStore } from "../store/useAuthStore";
 import { PageSkeleton } from "../components/templates/PageSkeleton";
-import { useMovieStore } from "../store/useMovieStore";
 import type { Movie } from "../const/movies";
 import { ServerError } from "./ServerError";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "../store/redux/store";
+import { fetchMovies } from "../store/redux/movieSlice";
 
 const MyList = () => {
+    const dispatch = useDispatch<AppDispatch>();
     const { user } = useAuthStore();
-    const { movies, fetchMovies, isLoading, error } = useMovieStore();
+
+    const { movies, isLoading, error } = useSelector((state: RootState) => state.movieData);
 
     useEffect(() => {
         if (movies.length === 0) {
-            fetchMovies();
+            dispatch(fetchMovies());
         }
-    }, [fetchMovies, movies.length]);
+    }, [dispatch, movies.length]);
 
     const myMovies = useMemo<Movie[]>(() => {
         const userList = user?.myList;
@@ -31,7 +35,12 @@ const MyList = () => {
     }
 
     if (error && movies.length === 0) {
-        return <ServerError message={error} onRetry={fetchMovies} />;
+        return (
+            <ServerError
+                message={error}
+                onRetry={() => dispatch(fetchMovies())}
+            />
+        );
     }
 
     return (

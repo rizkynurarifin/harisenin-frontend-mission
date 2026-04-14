@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useMovieStore } from "../../store/useMovieStore";
 import { Button } from "../../components/atoms/Button";
 import { genreList } from "../../const/genre";
 import type { EpisodeDetail, Movie, MovieType, SeriesType } from "../../const/movies";
@@ -8,10 +7,13 @@ import { FormField } from "../../components/molecules/FormField";
 import { FileUpload } from "../../components/molecules/FileUpload";
 import { FormLabel } from "../../components/atoms/FormLabel";
 import { FormSwitch } from "../../components/molecules/FormSwitch";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "../../store/redux/store";
+import { addMovieAction } from "../../store/redux/movieSlice";
 
 export const CreateMovie = () => {
     const navigate = useNavigate();
-    const { addMovie } = useMovieStore();
+    const dispatch = useDispatch<AppDispatch>();
 
     const [formData, setFormData] = useState({
         title: "",
@@ -144,7 +146,7 @@ export const CreateMovie = () => {
             payload = {
                 ...baseData,
                 type: "movie",
-                duration: Number(formData.duration),
+                duration: formData.duration,
             } as MovieType;
         } else {
             const optimizedEpisodes = formData.episodes.map((ep, index) => {
@@ -162,14 +164,14 @@ export const CreateMovie = () => {
             payload = {
                 ...baseData,
                 type: "series",
-                totalEpisodes: Number(formData.totalEpisodes),
+                totalEpisodes: formData.totalEpisodes,
                 episodes: optimizedEpisodes,
                 lastWatchedEpisodeId: optimizedEpisodes[0]?.id || 1,
             } as SeriesType;
         }
 
         try {
-            await addMovie(payload);
+            await dispatch(addMovieAction(payload)).unwrap();
             alert("Konten Berhasil Disimpan!");
             navigate("/admin");
         } catch (error) {

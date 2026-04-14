@@ -1,18 +1,21 @@
 import { useEffect, useMemo } from "react";
 import { HeroSection } from "../components/organisms/HeroSection";
 import { MovieSection } from "../components/templates/MovieSection";
-import { useMovieStore } from "../store/useMovieStore";
 import { PageSkeleton } from "../components/templates/PageSkeleton";
 import { ServerError } from "./ServerError";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "../store/redux/store";
+import { fetchMovies } from "../store/redux/movieSlice";
 
 const Home = () => {
-    const { movies, fetchMovies, isLoading, error } = useMovieStore();
+    const dispatch = useDispatch<AppDispatch>();
+    const { movies, isLoading, error } = useSelector((state: RootState) => state.movieData);
 
     useEffect(() => {
         if (movies.length === 0) {
-            fetchMovies();
+            dispatch(fetchMovies());
         }
-    }, [fetchMovies, movies.length]);
+    }, [dispatch, movies.length]);
 
     const continueWatching = useMemo(() =>
         movies
@@ -43,7 +46,12 @@ const Home = () => {
     }
 
     if (error && movies.length === 0) {
-        return <ServerError message={error} onRetry={fetchMovies} />;
+        return (
+            <ServerError
+                message={error}
+                onRetry={() => dispatch(fetchMovies())}
+            />
+        );
     }
 
     return (

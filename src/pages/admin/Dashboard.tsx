@@ -1,14 +1,17 @@
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useMovieStore } from "../../store/useMovieStore";
 import { Button } from "../../components/atoms/Button";
 import { genreList } from "../../const/genre";
 import { ServerError } from "../ServerError";
 import { IoAdd } from "react-icons/io5";
 import { TableSkeleton } from "../../components/templates/TableSkeleton";
+import { useDispatch, useSelector } from "react-redux";
+import { deleteMovieAction, fetchMovies, clearError } from "../../store/redux/movieSlice";
+import type { AppDispatch, RootState } from "../../store/redux/store";
 
 export const Dashboard = () => {
-    const { movies, fetchMovies, deleteMovie, isLoading, error } = useMovieStore();
+    const dispatch = useDispatch<AppDispatch>();
+    const { movies, isLoading, error } = useSelector((state: RootState) => state.movieData);
 
     const [filterType, setFilterType] = useState("");
     const [filterYear, setFilterYear] = useState("");
@@ -17,16 +20,15 @@ export const Dashboard = () => {
     const itemsPerPage = 10;
 
     useEffect(() => {
-        if (movies.length === 0) {
-            fetchMovies();
-        }
-    }, [fetchMovies, movies.length]);
+        dispatch(fetchMovies());
+        return () => { dispatch(clearError()); };
+    }, [dispatch]);
 
     const filteredMovies = useMemo(() => {
         return movies
             .filter((movie) => {
                 const matchesType = filterType ? movie.type === filterType : true;
-                const matchesYear = filterYear ? movie.year.toString() === filterYear : true;
+                const matchesYear = filterYear ? String(movie.year) === filterYear : true;
                 const matchesGenre = filterGenre ? movie.genres?.includes(filterGenre) : true;
                 return matchesType && matchesYear && matchesGenre;
             })
@@ -38,7 +40,7 @@ export const Dashboard = () => {
     }
 
     if (error && movies.length === 0) {
-        return <ServerError message={error} onRetry={fetchMovies} />;
+        return <ServerError message={error} onRetry={() => dispatch(fetchMovies())} />;
     }
 
     // Logika Pagination
@@ -47,10 +49,13 @@ export const Dashboard = () => {
     const paginatedMovies = filteredMovies.slice(startIndex, startIndex + itemsPerPage);
     const uniqueYears = Array.from(new Set(movies.map((m) => m.year))).sort((a, b) => b - a);
 
-
     const handleDelete = async (id: string) => {
         if (window.confirm("Apakah kamu yakin ingin menghapus konten ini?")) {
-            await deleteMovie(id);
+            try {
+                await dispatch(deleteMovieAction(id)).unwrap();
+            } catch (err) {
+                alert("Gagal menghapus: " + err);
+            }
         }
     };
 

@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, Navigate } from "react-router-dom";
-import { useMovieStore } from "../../store/useMovieStore";
 import { Button } from "../../components/atoms/Button";
 import { genreList } from "../../const/genre";
 import type { EpisodeDetail, Movie, MovieType, SeriesType } from "../../const/movies";
@@ -8,13 +7,16 @@ import { FormField } from "../../components/molecules/FormField";
 import { FormLabel } from "../../components/atoms/FormLabel";
 import { FileUpload } from "../../components/molecules/FileUpload";
 import { FormSwitch } from "../../components/molecules/FormSwitch";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "../../store/redux/store";
+import { fetchMovies, updateMovieAction } from "../../store/redux/movieSlice";
 
 export const EditMovie = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const movies = useMovieStore((state) => state.movies);
-    const updateMovie = useMovieStore((state) => state.updateMovie);
+    const dispatch = useDispatch<AppDispatch>();
 
+    const { movies } = useSelector((state: RootState) => state.movieData);
     const movieToEdit = movies.find((m) => m.id === id);
 
     const [formData, setFormData] = useState(() => {
@@ -56,6 +58,12 @@ export const EditMovie = () => {
             };
         }
     });
+
+    useEffect(() => {
+        if (movies.length === 0) {
+            dispatch(fetchMovies());
+        }
+    }, [dispatch, movies.length]);
 
     const addEpisode = () => {
         setFormData(prev => {
@@ -177,7 +185,7 @@ export const EditMovie = () => {
                 ...baseData,
                 id: id!,
                 type: "movie",
-                duration: Number(formData.duration),
+                duration: formData.duration,
             } as MovieType;
         } else {
             const optimizedEpisodes = formData.episodes.map((ep, index) => {
@@ -195,14 +203,14 @@ export const EditMovie = () => {
                 ...baseData,
                 id: id!,
                 type: "series",
-                totalEpisodes: Number(formData.totalEpisodes),
+                totalEpisodes: formData.totalEpisodes,
                 episodes: optimizedEpisodes,
                 lastWatchedEpisodeId: (movieToEdit as SeriesType).lastWatchedEpisodeId || optimizedEpisodes[0]?.id || 1,
             } as SeriesType;
         }
 
         try {
-            await updateMovie(id!, payload);
+            await dispatch(updateMovieAction({ id: id!, data: payload })).unwrap();
             alert("Konten Berhasil Diperbarui!");
             navigate("/admin");
         } catch (error) {

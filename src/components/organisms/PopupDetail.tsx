@@ -4,8 +4,9 @@ import { BiCheck, BiPlus } from 'react-icons/bi';
 import { MdVolumeOff, MdVolumeUp } from 'react-icons/md';
 import { RxCross2 } from "react-icons/rx";
 import { MovieBadge } from '../atoms/MovieBadge';
-import { useMovieStore } from '../../store/useMovieStore';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../store/redux/store';
 
 interface PopupDetailProps {
     movieId: string | number | null;
@@ -24,7 +25,8 @@ const formatDuration = (minutes: number) => {
 };
 
 export const PopupDetail = ({ movieId, open, onOpenChange }: PopupDetailProps) => {
-    const movies = useMovieStore((state) => state.movies);
+    const { movies } = useSelector((state: RootState) => state.movieData);
+
     const [mutedVideo, setMutedVideo] = useState(true);
     const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -214,7 +216,7 @@ export const PopupDetail = ({ movieId, open, onOpenChange }: PopupDetailProps) =
                                                                     <p className='text-mini md:text-sm shrink-0 ml-2'>{episode.duration}</p>
                                                                 </div>
                                                                 <p className='text-text-light-secondary line-clamp-1 lg:line-clamp-2 text-mini md:text-sm lg:text-base'>
-                                                                    {episode.description}
+                                                                    {episode.description || description}
                                                                 </p>
                                                             </div>
                                                         </article>

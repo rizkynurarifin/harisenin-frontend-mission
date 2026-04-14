@@ -7,7 +7,8 @@ import { IoChevronDown } from 'react-icons/io5';
 import { IoMdInformationCircleOutline } from 'react-icons/io';
 import { PopupDetail } from './PopupDetail';
 import { Link, useLocation } from 'react-router-dom';
-import { useMovieStore } from '../../store/useMovieStore';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../store/redux/store';
 
 const fallbackData: Movie = {
     id: "0",
@@ -32,10 +33,10 @@ interface HeroSectionProps {
 }
 
 export const HeroSection = ({ withGenre, movie }: HeroSectionProps) => {
+    const { movies } = useSelector((state: RootState) => state.movieData);
+    
     const [mutedVideo, setMutedVideo] = useState(true);
     const [detailSeriesDialog, setDetailSeriesDialog] = useState(false);
-
-    const movies = useMovieStore((state) => state.movies);
 
     const location = useLocation();
     const pathname = location.pathname.toLowerCase();
