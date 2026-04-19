@@ -1,4 +1,4 @@
-import { type ReactNode, useState, useRef, useLayoutEffect } from "react";
+import { type ReactNode, useState, useRef, useLayoutEffect, useCallback } from "react";
 import { CarouselButton } from "../atoms/CarouselButton";
 
 interface MovieCarouselProps {
@@ -16,7 +16,7 @@ export const MovieCarousel = ({
     const [isAtEnd, setIsAtEnd] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const getPreciseMaxScroll = () => {
+    const getPreciseMaxScroll = useCallback(() => {
         if (!containerRef.current) return 0;
         const container = containerRef.current;
 
@@ -31,7 +31,7 @@ export const MovieCarousel = ({
 
         // Nilai maksimal geser ke kiri adalah selisih lebar konten dan lebar layar
         return -(scrollWidth - viewPortWidth);
-    };
+    }, [variant]);
 
     useLayoutEffect(() => {
         const updateStatus = () => {
@@ -43,7 +43,7 @@ export const MovieCarousel = ({
 
         window.addEventListener("resize", updateStatus);
         return () => window.removeEventListener("resize", updateStatus);
-    }, [translateX, children]);
+    }, [translateX, children, getPreciseMaxScroll]);
 
     const handleSlide = (direction: "right" | "left") => {
         if (containerRef.current) {
