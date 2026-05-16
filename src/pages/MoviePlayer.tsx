@@ -15,9 +15,8 @@ export const MoviePlayer = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch<AppDispatch>();
 
-    // --- State Media ---
-    const [isPlaying, setIsPlaying] = useState(true);
-    const [isMuted, setIsMuted] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [isMuted, setIsMuted] = useState(true);
     const [volume, setVolume] = useState(1);
     const [played, setPlayed] = useState(0);
     const [, setPlayedSeconds] = useState(0);
@@ -26,12 +25,10 @@ export const MoviePlayer = () => {
     const [playbackRate, setPlaybackRate] = useState(1);
     const [isSeeking, setIsSeeking] = useState(false);
 
-    // --- Refs & Fullscreen ---
     const playerRef = useRef<HTMLVideoElement | null>(null);
     const { isFullscreen, toggleFullscreen, containerRef } = useFullscreen();
     const [fullscreenContainer, setFullscreenContainer] = useState<HTMLElement | null>(null);
 
-    // --- Data Fetching (Your Code) ---
     const { movies, isLoading } = useSelector((state: RootState) => state.movieData);
     const isUserPremium = useAuthStore((state) => state.user?.isPremium ?? false);
 
@@ -49,18 +46,23 @@ export const MoviePlayer = () => {
         return movies.find((m) => m.id === id);
     }, [movies, id]);
 
-    // --- Logic Helpers ---
     const isPremiumOnly = movie?.isPremium && !isUserPremium;
     const hasTrailer = !!movie?.trailerUrl;
     const episodesData = movie?.type === 'series' ? movie.episodes : [];
+
+    useEffect(() => {
+        if (!isPremiumOnly && !isPlaying) {
+            console.log("masuk sini")
+            setIsPlaying(true);
+        }
+    }, [isPremiumOnly])
 
     const { isIdle, pauseTimer, resumeTimer } = useIdleTimer({
         timeout: 3000,
         isEnabled: isFullscreen && !isPremiumOnly,
     });
     const controlsHidden = isFullscreen && isIdle;
-
-    // --- Media Handlers (Merged Logic) ---
+    
     const handleTogglePlay = () => {
         if (!movie || (movie.isPremium && !isUserPremium)) return;
         setIsPlaying((prev) => !prev);
