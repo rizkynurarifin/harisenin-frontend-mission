@@ -1,34 +1,29 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore, type Plan } from "../../store/useAuthStore";
+import axiosInstance from "../../services/api/axiosInstance";
 import { PricingCard } from "../molecules/PricingCard";
 
 export const PricingSection = () => {
     const setSelectedPlan = useAuthStore((state) => state.setSelectedPlan);
     const navigate = useNavigate();
 
-    const plans: Plan[] = [
-        {
-            title: "Individual",
-            price: "Rp49,990/bulan",
-            rawPrice: 49990,
-            accounts: "1 Akun",
-            features: ["Tidak ada iklan", "Kualitas 720p", "Download konten pilihan"]
-        },
-        {
-            title: "Berdua",
-            price: "Rp79,990/bulan",
-            rawPrice: 79990,
-            accounts: "2 Akun",
-            features: ["Tidak ada iklan", "Kualitas 1080p", "Download konten pilihan"]
-        },
-        {
-            title: "Keluarga",
-            price: "Rp159,990/bulan",
-            rawPrice: 159990,
-            accounts: "5-7 Akun",
-            features: ["Tidak ada iklan", "Kualitas 4K", "Download konten pilihan"]
-        }
-    ];
+    const [plans, setPlans] = useState<Plan[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchPlans = async () => {
+            try {
+                const response = await axiosInstance.get('/plans');
+                setPlans(response.data);
+            } catch (error) {
+                console.error("Gagal mengambil data paket langganan:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPlans();
+    }, []);
 
     const handleSubscriptionClick = (plan: Plan) => {
         setSelectedPlan(plan);
@@ -45,13 +40,17 @@ export const PricingSection = () => {
             </div>
 
             <div className="flex flex-col lg:flex-row gap-8 lg:gap-18 max-w-7xl justify-center items-center lg:items-stretch">
-                {plans.map((plan) => (
-                    <PricingCard
-                        key={plan.title}
-                        {...plan}
-                        onClick={() => handleSubscriptionClick(plan)}
-                    />
-                ))}
+                {loading ? (
+                    <p className="text-white">Memuat paket langganan...</p>
+                ) : (
+                    plans.map((plan) => (
+                        <PricingCard
+                            key={plan.title}
+                            {...plan}
+                            onClick={() => handleSubscriptionClick(plan)}
+                        />
+                    ))
+                )}
             </div>
         </section>
     );

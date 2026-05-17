@@ -22,12 +22,21 @@ export const ProfileHeader = ({ avatar, onAvatarChange }: ProfileHeaderProps) =>
         }
     };
 
+    // Helper untuk memformat URL gambar agar bisa menangkap URL dari Backend
+    const getAvatarSrc = () => {
+        if (!avatar) return "/src/assets/profile.png";
+        if (avatar.startsWith('http') || avatar.startsWith('data:image')) return avatar;
+        // Gunakan VITE_API_URL, default ke localhost:5000 jika tidak diset
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        return `${baseUrl}${avatar.startsWith('/') ? '' : '/'}${avatar}`;
+    };
+
     return (
         <div className="flex items-center gap-6">
             <div className="size-20 lg:size-35 rounded-full overflow-hidden shrink-0">
                 <div className="w-full h-full bg-greyscale-700">
                     <img
-                        src={avatar || "/src/assets/profile.png"}
+                        src={getAvatarSrc()}
                         alt="Profile"
                         className="w-full h-full object-cover"
                     />

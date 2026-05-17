@@ -17,6 +17,14 @@ export const Header = ({ withGenre }: HeaderProps) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const { isLoggedIn, logout, user } = useAuthStore();
 
+    const getAvatarSrc = () => {
+        const avatar = user?.avatar;
+        if (!avatar) return "/src/assets/profile.png";
+        if (avatar.startsWith('http') || avatar.startsWith('data:image')) return avatar;
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        return `${baseUrl}${avatar.startsWith('/') ? '' : '/'}${avatar}`;
+    };
+
     return (
         <header className='py-1.5 px-5 md:py-4 md:px-10 lg:py-6.25 lg:px-20 flex justify-between items-center md:gap-12 sticky top-0 w-full z-60 bg-other-page-header'>
             <div className='flex gap-3 lg:gap-20 items-center'>
@@ -86,8 +94,8 @@ export const Header = ({ withGenre }: HeaderProps) => {
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 >
                     <img
-                        src={user?.avatar || '/src/assets/profile.png'}
-                        className='w-6 md:w-10 rounded-full border border-white/20 object-cover'
+                        src={getAvatarSrc()}
+                        className='w-6 h-6 md:w-10 md:h-10 aspect-square rounded-full border border-white/20 object-cover'
                         alt='avatar profile'
                     />
 

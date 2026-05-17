@@ -15,7 +15,7 @@ export const Register = () => {
     const navigate = useNavigate();
     const register = useAuthStore((state) => state.register);
 
-    const handleRegister = (e: React.FormEvent) => {
+    const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
 
@@ -43,7 +43,7 @@ export const Register = () => {
             return;
         }
 
-        register({
+        const result = await register({
             username,
             email,
             password,
@@ -51,9 +51,13 @@ export const Register = () => {
             isPremium: false,
             myList: []
         });
-        
-        alert("Berhasil mendaftar! Silakan masuk.");
-        navigate("/login");
+
+        if (result.success) {
+            alert("Berhasil mendaftar! Silakan masuk.");
+            navigate("/login");
+        } else {
+            setError(result.message);
+        }
     };
 
     return (

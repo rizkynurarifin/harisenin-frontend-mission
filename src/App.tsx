@@ -38,7 +38,7 @@ const router = createBrowserRouter([
                     { path: "my-list", element: <MyList /> },
                     { path: "profile", element: <Profile /> },
                     { path: "payment", element: <Payment /> },
-                    { path: "payment-detail", element: <PaymentDetail /> },
+                    { path: "payment-detail/:orderId", element: <PaymentDetail /> },
                 ]
             },
 
@@ -48,7 +48,7 @@ const router = createBrowserRouter([
                 children: [
                     { index: true, element: <Dashboard /> },
                     { path: "create", element: <CreateMovie /> },
-                    { path: "edit/:id", element: <EditMovie /> }
+                    { path: "edit/:slug", element: <EditMovie /> }
                 ]
             }
         ],
@@ -57,7 +57,7 @@ const router = createBrowserRouter([
     {
         element: <ProtectedRoute />,
         children: [
-            { path: "movie-player/:id", element: <MoviePlayer /> },
+            { path: "movie-player/:slug", element: <MoviePlayer /> },
         ]
     },
 

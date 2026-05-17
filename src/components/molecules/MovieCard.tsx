@@ -127,7 +127,7 @@ export const MovieCard = ({ movie, variant = 'landscape' }: MovieCardProps) => {
                         <div className='flex justify-between items-center'>
                             <div className='flex lg:gap-4'>
                                 <button
-                                    onClick={() => navigate(`/movie-player/${movie.id}`)}
+                                    onClick={() => navigate(`/movie-player/${movie.slug || movie.id}`)}
                                     className='bg-white rounded-full p-2 cursor-pointer transition-all duration-200 active:scale-95'
                                 >
                                     <IoMdPlay className='text-other-page-header lg:text-2xl' />

@@ -213,7 +213,7 @@ export const PopupDetail = ({ movieId, open, onOpenChange }: PopupDetailProps) =
                                                             <div className='space-y-1 lg:space-y-2'>
                                                                 <div className='flex items-center justify-between font-semibold text-mini md:text-lg text-text-light-primary'>
                                                                     <h4 className="line-clamp-1">{episode.title}</h4>
-                                                                    <p className='text-mini md:text-sm shrink-0 ml-2'>{episode.duration}</p>
+                                                                    <p className='text-mini md:text-sm shrink-0 ml-2'>{formatDuration(episode.duration || 0)}</p>
                                                                 </div>
                                                                 <p className='text-text-light-secondary line-clamp-1 lg:line-clamp-2 text-mini md:text-sm lg:text-base'>
                                                                     {episode.description || description}

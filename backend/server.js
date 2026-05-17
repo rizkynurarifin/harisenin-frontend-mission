@@ -6,14 +6,24 @@ const movieRoutes = require('./routes/movieRoutes');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const path = require('path');
+
 // Middleware
 app.use(cors());
-app.use(express.json()); // Untuk parsing application/json
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' })); // Perbesar limit JSON untuk menerima Base64 yang dikirim
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Serve folder uploads sebagai static files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+const authRoutes = require('./routes/authRoutes');
+const subscriptionRoutes = require('./routes/subscriptionRoutes');
 
 // Routes
 // Menggunakan prefix URL tanpa '/api' tambahan untuk match contoh /movies di tabel
 app.use('/', movieRoutes); 
+app.use('/auth', authRoutes); 
+app.use('/plans', subscriptionRoutes);
 
 // Root endpoint test
 app.get('/', (req, res) => {

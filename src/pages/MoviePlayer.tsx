@@ -11,7 +11,7 @@ import { useIdleTimer } from '../hooks/useIdleTimer';
 import ReactPlayer from 'react-player';
 
 export const MoviePlayer = () => {
-    const { id } = useParams<{ id: string }>();
+    const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
     const dispatch = useDispatch<AppDispatch>();
 
@@ -43,8 +43,8 @@ export const MoviePlayer = () => {
     }, [containerRef]);
 
     const movie = useMemo(() => {
-        return movies.find((m) => m.id === id);
-    }, [movies, id]);
+        return movies.find((m) => m.slug === slug || String(m.id) === slug);
+    }, [movies, slug]);
 
     const isPremiumOnly = movie?.isPremium && !isUserPremium;
     const hasTrailer = !!movie?.trailerUrl;

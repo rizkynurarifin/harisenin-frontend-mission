@@ -1,30 +1,67 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Button } from "../atoms/Button";
 import { DetailPaymentTitle } from "../atoms/DetailPaymentTitle";
 import { PaymentOption } from "../molecules/PaymentOption";
 import { PricingCard } from "../molecules/PricingCard";
 import { TransactionSummary } from "../molecules/TransactionSummary";
 import { useAuthStore } from "../../store/useAuthStore";
+import axiosInstance from "../../services/api/axiosInstance";
 
 export const PaymentSummarySection = () => {
+    const { orderId } = useParams<{ orderId: string }>();
     const navigate = useNavigate();
     const setPremium = useAuthStore((state) => state.setPremium);
-    const selectedPlan = useAuthStore((state) => state.selectedPlan);
-    const paymentCode = "3KDJ5XFOV";
+    const user = useAuthStore((state) => state.user);
+    
+    const [orderData, setOrderData] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isPaying, setIsPaying] = useState(false);
 
-    if (!selectedPlan) {
-        navigate("/subscription");
+    useEffect(() => {
+        const fetchOrder = async () => {
+            if (!user) return;
+            try {
+                const response = await axiosInstance.get(`/plans/order/${orderId}`, {
+                    params: { userId: user.id }
+                });
+                setOrderData(response.data);
+            } catch (error) {
+                alert("Order tidak ditemukan!");
+                navigate("/subscription");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchOrder();
+    }, [orderId, user, navigate]);
+
+    if (isLoading) {
+        return <p className="text-white text-center py-20">Memuat detail pesanan...</p>;
+    }
+
+    if (!orderData) {
         return null;
     }
 
-    const handlePaymentAction = () => {
-        setPremium(true);
-        alert("Pembayaran Berhasil! Selamat menonton konten Premium.");
-        navigate("/profile");
+    const handlePaymentAction = async () => {
+        try {
+            setIsPaying(true);
+            await axiosInstance.post(`/plans/order/${orderId}/pay`, { userId: user?.id });
+            
+            setPremium(true);
+            alert("Pembayaran Berhasil! Selamat menonton konten Premium.");
+            navigate("/profile");
+        } catch (error: any) {
+            alert(error.response?.data?.message || "Pembayaran gagal.");
+        } finally {
+            setIsPaying(false);
+        }
     };
 
     const getFormattedDate = () => {
-        const date = new Date();
+        const date = new Date(orderData.created_at);
         return new Intl.DateTimeFormat("id-ID", {
             day: "2-digit",
             month: "long",
@@ -34,7 +71,8 @@ export const PaymentSummarySection = () => {
 
     const copyCodeToClipboard = async () => {
         try {
-            await navigator.clipboard.writeText(paymentCode);
+            await navigator.clipboard.writeText(orderData.payment_code);
+            alert("Kode berhasil disalin!");
         } catch {
             if (import.meta.env.DEV) {
                 console.error("Failed copy to clipboard");
@@ -50,20 +88,24 @@ export const PaymentSummarySection = () => {
             <div className="grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-5 md:gap-8 lg:gap-10">
                 <aside>
                     <PricingCard
-                        title={selectedPlan.title}
-                        price={selectedPlan.price}
-                        accounts={selectedPlan.accounts}
-                        features={selectedPlan.features}
+                        title={orderData.plan_name}
+                        price={`Rp${Number(orderData.price).toLocaleString('id-ID')}/bulan`}
+                        accounts={orderData.account_count > 1 ? `${orderData.plan_id === 3 ? '5-7' : orderData.account_count} Akun` : '1 Akun'}
+                        features={orderData.plan_features}
                     />
                 </aside>
                 <aside className="grid gap-4 lg:gap-7 lg:px-6">
                     <div className="space-y-2 grid grid-cols-1">
                         <DetailPaymentTitle>Metode Pembayaran</DetailPaymentTitle>
                         <PaymentOption
-                            stateValue="bca"
-                            value="bca"
-                            images={["/assets/payment-method/bca.png"]}
-                            label="BCA Virtual Account"
+                            stateValue={orderData.payment_method}
+                            value={orderData.payment_method}
+                            images={
+                                orderData.payment_method === 'bca-va' 
+                                ? ["/assets/payment-method/bca.png"] 
+                                : ["/assets/payment-method/visa.png", "/assets/payment-method/mastercard.png"]
+                            }
+                            label={orderData.payment_method === 'bca-va' ? "BCA Virtual Account" : "Kartu Debit/Kredit"}
                         />
                         <ul className="mt-2 space-y-2 text-xs md:text-base">
                             <li className="flex items-center gap-2">
@@ -78,12 +120,13 @@ export const PaymentSummarySection = () => {
                                 <span className="text-text-light-secondary">
                                     Kode Pembayaran
                                 </span>
-                                <span className="text-text-light-primary text-right ml-auto">
-                                    {paymentCode}
+                                <span className="text-text-light-primary text-right ml-auto font-bold tracking-wider text-primary">
+                                    {orderData.payment_code}
                                 </span>
                                 <button
                                     onClick={copyCodeToClipboard}
                                     className="cursor-pointer"
+                                    title="Salin Kode"
                                 >
                                     <svg
                                         className="size-4 md:size-5"
@@ -103,31 +146,29 @@ export const PaymentSummarySection = () => {
                     <div className="space-y-3 lg:space-y-4">
                         <DetailPaymentTitle>Ringkasan Transaksi</DetailPaymentTitle>
                         <TransactionSummary
-                            planTitle={selectedPlan.title}
-                            planPrice={selectedPlan.rawPrice}
+                            planTitle={orderData.plan_name}
+                            planPrice={orderData.total_amount - 3000} 
                         />
                     </div>
                     <div className="space-y-2">
                         <DetailPaymentTitle>Tata Cara Pembayaran</DetailPaymentTitle>
                         <ol className="text-text-light-secondary list-decimal pl-3 md:pl-0 md:list-inside text-xs md:text-base">
                             <li>
-                                Buka aplikasi BCA Mobile Banking atau akses BCA Internet
-                                Banking.
+                                Buka aplikasi Mobile Banking atau Internet Banking Anda.
                             </li>
                             <li>Login ke akun Anda.</li>
                             <li>Pilih menu "Transfer" atau "Pembayaran".</li>
                             <li>
-                                Pilih opsi "Virtual Account" atau "Virtual Account Number".
+                                Masukkan kode pembayaran <span className="font-bold">{orderData.payment_code}</span>.
                             </li>
                             <li>
-                                Masukkan nomor virtual account dan jumlah pembayaran, lalu
-                                konfirmasikan pembayaran.
+                                Konfirmasikan jumlah pembayaran Rp. {orderData.total_amount.toLocaleString('id-ID')}.
                             </li>
                         </ol>
                     </div>
                     <div>
-                        <Button onClick={handlePaymentAction}>
-                            Bayar
+                        <Button onClick={handlePaymentAction} disabled={isPaying || orderData.status === 'success'}>
+                            {isPaying ? 'Memproses...' : orderData.status === 'success' ? 'Sudah Dibayar' : 'Konfirmasi Bayar'}
                         </Button>
                     </div>
                 </aside>

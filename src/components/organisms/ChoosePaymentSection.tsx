@@ -5,8 +5,9 @@ import { InputVoucher } from "../atoms/InputVoucher";
 import { PricingCard } from "../molecules/PricingCard";
 import { TransactionSummary } from "../molecules/TransactionSummary";
 import { PaymentMethod, type PaymentMethodOption } from "../molecules/PaymentMethod";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/useAuthStore";
+import axiosInstance from "../../services/api/axiosInstance";
 
 const paymentMethodOptions: PaymentMethodOption[] = [
     {
@@ -28,12 +29,41 @@ const paymentMethodOptions: PaymentMethodOption[] = [
 
 export const ChoosePaymentSection = () => {
     const [selectedPayment, setSeletectedPayment] = useState("");
+    const [voucherCode, setVoucherCode] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    
     const selectedPlan = useAuthStore((state) => state.selectedPlan);
+    const user = useAuthStore((state) => state.user);
+    const navigate = useNavigate();
 
     // Proteksi: Jika tidak ada paket dipilih, kembalikan ke halaman subscription
     if (!selectedPlan) {
         return <Navigate to="/subscription" replace />;
     }
+
+    const handleCreateOrder = async () => {
+        if (!selectedPayment) {
+            alert("Silakan pilih metode pembayaran terlebih dahulu!");
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+            const response = await axiosInstance.post('/plans/order', {
+                userId: user?.id,
+                planId: selectedPlan.id,
+                paymentMethod: selectedPayment,
+                voucherCode: voucherCode || null
+            });
+            
+            // Arahkan ke halaman payment detail dengan orderId
+            navigate(`/payment-detail/${response.data.orderId}`);
+        } catch (error: any) {
+            alert(error.response?.data?.message || "Gagal membuat order.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <section className="px-5 pt-5 pb-10 md:px-10 md:py-8 lg:px-20 lg:py-10 lg:my-20">
@@ -63,7 +93,7 @@ export const ChoosePaymentSection = () => {
                     <div className="grid gap-4">
                         <DetailPaymentTitle>Kode Voucher (Jika Ada)</DetailPaymentTitle>
                         <div className="grid grid-cols-[1fr_max-content] gap-4">
-                            <InputVoucher />
+                            <InputVoucher value={voucherCode} onChange={(e) => setVoucherCode(e.target.value)} />
                             <Button variant="dark">Gunakan</Button>
                         </div>
                     </div>
@@ -74,8 +104,12 @@ export const ChoosePaymentSection = () => {
                             planTitle={selectedPlan.title}
                             planPrice={selectedPlan.rawPrice}
                         />
-                        <Button to="/payment-detail" className="w-fit">
-                            Bayar
+                        <Button 
+                            onClick={handleCreateOrder} 
+                            disabled={isLoading}
+                            className="w-fit"
+                        >
+                            {isLoading ? 'Memproses...' : 'Bayar'}
                         </Button>
                     </div>
                 </aside>

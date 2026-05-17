@@ -36,20 +36,54 @@ const Profile = () => {
     const [formData, setFormData] = useState({
         username: user?.username || "",
         email: user?.email || "",
-        password: user?.password || "",
+        password: "", 
         avatar: user?.avatar || "",
         isPremium: user?.isPremium || false
     });
+
+    const [isSaving, setIsSaving] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
         setFormData(prev => ({ ...prev, [id]: value }));
     };
 
-    const handleSave = (e: React.FormEvent) => {
+    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        updateProfile(formData);
-        alert("Profil berhasil diperbarui!");
+        if (!user) return;
+        
+        setIsSaving(true);
+        try {
+            // Hanya kirim password jika pengguna mengisi input (mengubahnya)
+            const payload = { 
+                userId: user.id, 
+                username: formData.username, 
+                email: formData.email,
+                avatar: formData.avatar,
+                ...(formData.password ? { password: formData.password } : {})
+            };
+
+            const axiosInstance = (await import('../services/api/axiosInstance')).default;
+            const response = await axiosInstance.put('/auth/profile', payload);
+            
+            const newAvatar = response.data.avatar || formData.avatar;
+            
+            // Update auth store (lokal)
+            updateProfile({
+                username: formData.username,
+                email: formData.email,
+                avatar: newAvatar,
+                password: formData.password || user.password // Tetap pakai yang lama jika tidak diubah
+            });
+            
+            setFormData(prev => ({ ...prev, avatar: newAvatar }));
+            
+            alert("Profil berhasil diperbarui!");
+        } catch (error: any) {
+            alert(error.response?.data?.message || "Gagal memperbarui profil.");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     if (isLoading && movies.length === 0) {
@@ -99,6 +133,7 @@ const Profile = () => {
                                 label="Kata Sandi"
                                 value={formData.password}
                                 onChange={handleChange}
+                                placeholder="••••••••"
                                 hasEdit
                             />
                         </div>

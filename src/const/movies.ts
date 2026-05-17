@@ -5,12 +5,14 @@ export interface EpisodeDetail {
     duration: number;
     description: string;
     thumbnail: string;
+    videoUrl?: string;
     progress?: number;
 }
 
 interface CommonMetadata {
-    id: string;
+    id: number;
     title: string;
+    slug?: string;
     year: number;
     thumbnail: string;
     thumbnailLandscape: string;

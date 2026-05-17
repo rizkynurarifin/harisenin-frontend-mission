@@ -13,7 +13,7 @@ export const Login = () => {
     const navigate = useNavigate();
     const loginAction = useAuthStore((state) => state.login);
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
 
@@ -22,7 +22,7 @@ export const Login = () => {
             return;
         }
 
-        const result = loginAction(username, password);
+        const result = await loginAction(username, password);
 
         if (result.success) {
             navigate("/");

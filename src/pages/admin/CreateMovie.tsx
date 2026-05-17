@@ -124,6 +124,7 @@ export const CreateMovie = () => {
 
         const baseData = {
             title: formData.title,
+            slug: formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
             year: formData.year,
             thumbnail: formData.thumbnail,
             thumbnailLandscape: formData.thumbnailLandscape,
@@ -342,46 +343,129 @@ export const CreateMovie = () => {
 
                         <div className="space-y-4 max-h-100 overflow-y-auto pr-2 custom-scrollbar">
                             {formData.episodes.map((episode, index) => (
-                                <div key={episode.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 bg-white/5 rounded-lg border border-white/10 relative group">
-                                    <div className="md:col-span-1 flex items-center justify-center font-bold text-secondary">
-                                        #{episode.episodeNumber}
-                                    </div>
-
-                                    <div className="md:col-span-6">
-                                        <FormField
-                                            label="Judul Episode"
-                                            placeholder="Contoh: Awal Mula"
-                                            value={episode.title}
-                                            onChange={(e) => {
-                                                const newEpisodes = [...formData.episodes];
-                                                newEpisodes[index].title = e.target.value;
-                                                setFormData({ ...formData, episodes: newEpisodes });
-                                            }}
-                                        />
-                                    </div>
-
-                                    <div className="md:col-span-4">
-                                        <FormField
-                                            label="Durasi (Menit)"
-                                            type="number"
-                                            value={episode.duration || ""}
-                                            onChange={(e) => {
-                                                const newEpisodes = [...formData.episodes];
-                                                newEpisodes[index].duration = Number(e.target.value);
-                                                setFormData({ ...formData, episodes: newEpisodes });
-                                            }}
-                                        />
-                                    </div>
-
-                                    <div className="md:col-span-1 flex items-end pb-2">
+                                <div key={episode.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 bg-white/5 rounded-lg border border-white/10 relative group mb-4">
+                                    <div className="md:col-span-1 flex flex-col items-center justify-start pt-4 font-bold text-secondary">
+                                        <span className="text-lg">#{index + 1}</span>
                                         <button
                                             type="button"
                                             onClick={() => removeEpisode(episode.id)}
-                                            className={`p-2 rounded-lg transition-colors ${formData.episodes.length > 1 ? 'text-red-500 hover:bg-red-500/10' : 'text-gray-600 cursor-not-allowed'}`}
+                                            className={`mt-4 p-2 rounded-lg transition-colors ${formData.episodes.length > 1 ? 'text-red-500 hover:bg-red-500/10' : 'text-gray-600 cursor-not-allowed'}`}
                                             disabled={formData.episodes.length <= 1}
+                                            title="Hapus Episode"
                                         >
                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                         </button>
+                                    </div>
+
+                                    <div className="md:col-span-11 space-y-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                            <div className="lg:col-span-2">
+                                                <FormField
+                                                    label="Judul Episode"
+                                                    placeholder="Contoh: Awal Mula"
+                                                    value={episode.title}
+                                                    onChange={(e) => {
+                                                        setFormData(prev => {
+                                                            if (!prev) return prev;
+                                                            const newEpisodes = [...prev.episodes];
+                                                            newEpisodes[index] = { ...newEpisodes[index], title: e.target.value };
+                                                            return { ...prev, episodes: newEpisodes };
+                                                        });
+                                                    }}
+                                                />
+                                            </div>
+                                            <FormField
+                                                label="Durasi (Menit)"
+                                                type="number"
+                                                value={episode.duration || ""}
+                                                onChange={(e) => {
+                                                    setFormData(prev => {
+                                                        if (!prev) return prev;
+                                                        const newEpisodes = [...prev.episodes];
+                                                        newEpisodes[index] = { ...newEpisodes[index], duration: Number(e.target.value) };
+                                                        return { ...prev, episodes: newEpisodes };
+                                                    });
+                                                }}
+                                            />
+                                            <FormField
+                                                label="Progress (%)"
+                                                type="number"
+                                                min="0"
+                                                max="100"
+                                                value={episode.progress || ""}
+                                                onChange={(e) => {
+                                                    setFormData(prev => {
+                                                        if (!prev) return prev;
+                                                        const newEpisodes = [...prev.episodes];
+                                                        newEpisodes[index] = { ...newEpisodes[index], progress: Number(e.target.value) };
+                                                        return { ...prev, episodes: newEpisodes };
+                                                    });
+                                                }}
+                                            />
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <FormField
+                                                label="Sinopsis Episode"
+                                                as="textarea"
+                                                rows={3}
+                                                placeholder="Deskripsi singkat episode..."
+                                                className="resize-none"
+                                                value={episode.description}
+                                                onChange={(e) => {
+                                                    setFormData(prev => {
+                                                        if (!prev) return prev;
+                                                        const newEpisodes = [...prev.episodes];
+                                                        newEpisodes[index] = { ...newEpisodes[index], description: e.target.value };
+                                                        return { ...prev, episodes: newEpisodes };
+                                                    });
+                                                }}
+                                            />
+                                            <div className="space-y-4">
+                                                <FormField
+                                                    label="Video URL"
+                                                    placeholder="Contoh: /assets/video/ep1.mp4"
+                                                    value={episode.videoUrl || ""}
+                                                    onChange={(e) => {
+                                                        setFormData(prev => {
+                                                            if (!prev) return prev;
+                                                            const newEpisodes = [...prev.episodes];
+                                                            newEpisodes[index] = { ...newEpisodes[index], videoUrl: e.target.value };
+                                                            return { ...prev, episodes: newEpisodes };
+                                                        });
+                                                    }}
+                                                />
+                                                <FileUpload
+                                                    label="Thumbnail Episode"
+                                                    value={episode.thumbnail || ""}
+                                                    aspectRatio="aspect-video"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) {
+                                                            const reader = new FileReader();
+                                                            reader.onloadend = () => {
+                                                                const img = new Image();
+                                                                img.src = reader.result as string;
+                                                                img.onload = () => {
+                                                                    const canvas = document.createElement('canvas');
+                                                                    const scaleSize = 400 / img.width;
+                                                                    canvas.width = 400;
+                                                                    canvas.height = img.height * scaleSize;
+                                                                    const ctx = canvas.getContext('2d');
+                                                                    ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                                                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                                                                    
+                                                                    const newEpisodes = [...formData.episodes];
+                                                                    newEpisodes[index].thumbnail = compressedBase64;
+                                                                    setFormData({ ...formData, episodes: newEpisodes });
+                                                                };
+                                                            };
+                                                            reader.readAsDataURL(file);
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             ))}

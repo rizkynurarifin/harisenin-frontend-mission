@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import axiosInstance from '../services/api/axiosInstance';
 
 export interface Plan {
     title: string;
@@ -10,30 +11,30 @@ export interface Plan {
 }
 
 interface UserData {
+    id?: number;
     username: string;
     email: string;
     password?: string;
     avatar?: string;
     role: 'user' | 'admin';
     isPremium: boolean;
-    myList: string[];
+    myList: number[];
 }
 
 interface AuthStore {
     user: UserData | null;
     isLoggedIn: boolean;
-    registeredUsers: UserData[];
     selectedPlan: Plan | null;
 
     // Actions
-    register: (newUser: UserData) => void;
-    login: (username: string, pass: string) => { success: boolean; message: string };
+    register: (newUser: UserData) => Promise<{ success: boolean; message: string }>;
+    login: (username: string, pass: string) => Promise<{ success: boolean; message: string }>;
     logout: () => void;
     updateProfile: (updatedData: Partial<UserData>) => void;
     setPremium: (status: boolean) => void;
     setSelectedPlan: (plan: Plan | null) => void;
-    addToMyList: (movieId: string) => void;
-    removeFromMyList: (movieId: string) => void;
+    addToMyList: (movieId: number) => Promise<void>;
+    removeFromMyList: (movieId: number) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -42,74 +43,42 @@ export const useAuthStore = create<AuthStore>()(
             user: null,
             isLoggedIn: false,
             selectedPlan: null,
-            registeredUsers: [
-                {
-                    username: 'admin',
-                    email: 'admin@chill.com',
-                    password: '123',
-                    role: 'admin',
-                    avatar: '/src/assets/my-profile.jpeg',
-                    isPremium: true,
-                    myList: [],
-                }
-            ],
 
             // Fungsi Daftar
-            register: (newUser) => {
-                const { registeredUsers } = get();
-                const isExist = registeredUsers.find(
-                    (u) => u.username === newUser.username || u.email === newUser.email
-                );
-
-                if (!isExist) {
-                    const userWithDefaults = {
-                        ...newUser,
-                        isPremium: false,
-                        myList: [],
-                        avatar: newUser.avatar || '/src/assets/profile.png'
-                    };
-                    set({ registeredUsers: [...registeredUsers, userWithDefaults] });
+            register: async (newUser) => {
+                try {
+                    await axiosInstance.post('/auth/register', newUser);
+                    return { success: true, message: "Pendaftaran Berhasil" };
+                } catch (error: any) {
+                    return { success: false, message: error.response?.data?.message || "Gagal mendaftar" };
                 }
             },
 
             // Fungsi Login
-            login: (username, pass) => {
-                const { registeredUsers } = get();
-                const foundUser = registeredUsers.find(
-                    (u) => u.username === username && u.password === pass
-                );
-
-                if (foundUser) {
-                    set({ user: foundUser, isLoggedIn: true });
+            login: async (username, pass) => {
+                try {
+                    const response = await axiosInstance.post('/auth/login', { username, password: pass });
+                    const user = response.data.user;
+                    set({ user, isLoggedIn: true });
                     return { success: true, message: "Login Berhasil" };
+                } catch (error: any) {
+                    return { success: false, message: error.response?.data?.message || "Username atau password salah" };
                 }
-                return { success: false, message: "Username atau password salah" };
             },
 
-            // Fungsi Update Profile
+            // Fungsi Update Profile (Masih local untuk saat ini)
             updateProfile: (updatedData) => {
-                const { user, registeredUsers } = get();
+                const { user } = get();
                 if (!user) return;
-
-                const updatedUser = { ...user, ...updatedData };
-                const updatedList = registeredUsers.map((u) =>
-                    u.email === user.email ? { ...u, ...updatedData } : u
-                );
-
-                set({ user: updatedUser, registeredUsers: updatedList });
+                const updatedUser = { ...user, ...updatedData } as UserData;
+                set({ user: updatedUser });
             },
 
-            // Fungsi Status Premium
+            // Fungsi Status Premium (Masih local)
             setPremium: (status) => {
-                const { user, registeredUsers } = get();
+                const { user } = get();
                 if (!user) return;
-
-                const updatedUser = { ...user, isPremium: status };
-                const updatedList = registeredUsers.map((u) =>
-                    u.email === user.email ? updatedUser : u
-                );
-
-                set({ user: updatedUser, registeredUsers: updatedList });
+                set({ user: { ...user, isPremium: status } });
             },
 
             // Fungsi untuk menyimpan paket yang dipilih user
@@ -119,32 +88,34 @@ export const useAuthStore = create<AuthStore>()(
             logout: () => set({ user: null, isLoggedIn: false }),
 
             // Logika menambahkan film ke daftar
-            addToMyList: (movieId) => {
-                const { user, registeredUsers } = get();
-                if (!user || user.myList.includes(String(movieId))) return;
+            addToMyList: async (movieId) => {
+                const { user } = get();
+                if (!user || user.myList.includes(movieId)) return;
 
-                const updatedUser = { ...user, myList: [...user.myList, String(movieId)] };
-                const updatedList = registeredUsers.map((u) =>
-                    u.email === user.email ? updatedUser : u
-                );
-
-                set({ user: updatedUser, registeredUsers: updatedList });
+                try {
+                    await axiosInstance.post('/auth/mylist', { userId: user.id, movieId });
+                    const updatedUser = { ...user, myList: [...user.myList, movieId] };
+                    set({ user: updatedUser });
+                } catch (error) {
+                    console.error("Gagal menambahkan ke daftar", error);
+                }
             },
 
             // Logika menghapus film dari daftar
-            removeFromMyList: (movieId) => {
-                const { user, registeredUsers } = get();
+            removeFromMyList: async (movieId) => {
+                const { user } = get();
                 if (!user) return;
 
-                const updatedUser = {
-                    ...user,
-                    myList: user.myList.filter(id => String(id) !== String(movieId))
-                };
-                const updatedList = registeredUsers.map((u) =>
-                    u.email === user.email ? updatedUser : u
-                );
-
-                set({ user: updatedUser, registeredUsers: updatedList });
+                try {
+                    await axiosInstance.delete('/auth/mylist', { data: { userId: user.id, movieId } });
+                    const updatedUser = {
+                        ...user,
+                        myList: user.myList.filter(id => id !== movieId)
+                    };
+                    set({ user: updatedUser });
+                } catch (error) {
+                    console.error("Gagal menghapus dari daftar", error);
+                }
             },
         }),
         {

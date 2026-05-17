@@ -11,7 +11,7 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '../../store/redux/store';
 
 const fallbackData: Movie = {
-    id: "0",
+    id: 1,
     type: "movie",
     title: "Selamat Datang di CHILL",
     year: 2026,
