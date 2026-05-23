@@ -7,6 +7,23 @@ const axiosInstance = axios.create({
     },
 });
 
+// Interceptor Request untuk menyematkan token
+axiosInstance.interceptors.request.use((config) => {
+    const authStorage = localStorage.getItem('chill-auth-storage');
+    if (authStorage) {
+        try {
+            const parsed = JSON.parse(authStorage);
+            const token = parsed?.state?.token;
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+        } catch (error) {
+            console.error("Gagal membaca token:", error);
+        }
+    }
+    return config;
+});
+
 // Interceptor Response untuk menangani error global
 axiosInstance.interceptors.response.use(
     (response) => response,

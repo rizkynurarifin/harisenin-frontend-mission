@@ -93,7 +93,10 @@ export const useAuthStore = create<AuthStore>()(
             setSelectedPlan: (plan) => set({ selectedPlan: plan }),
 
             // Fungsi Logout
-            logout: () => set({ user: null, isLoggedIn: false }),
+            logout: () => {
+                delete axiosInstance.defaults.headers.common['Authorization'];
+                set({ user: null, token: null, isLoggedIn: false });
+            },
 
             // Logika menambahkan film ke daftar
             addToMyList: async (movieId) => {

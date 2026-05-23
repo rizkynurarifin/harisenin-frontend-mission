@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const subscriptionService = require('../services/subscriptionService');
+const authMiddleware = require('../middlewares/authMiddleware');
+
+// Terapkan middleware ke semua endpoint subscription
+router.use(authMiddleware.verifyToken);
 
 // Endpoint untuk mengambil daftar semua plan beserta fiturnya
 router.get('/', async (req, res) => {

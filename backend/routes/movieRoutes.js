@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const movieService = require('../services/movieService');
+const authMiddleware = require('../middlewares/authMiddleware');
+
+// Terapkan middleware ke semua endpoint movies
+router.use(authMiddleware.verifyToken);
 
 // GET /movies - List semua movies
 router.get('/movies', async (req, res) => {
