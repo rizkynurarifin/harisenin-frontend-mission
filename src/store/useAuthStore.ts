@@ -12,6 +12,7 @@ export interface Plan {
 
 interface UserData {
     id?: number;
+    fullname?: string;
     username: string;
     email: string;
     password?: string;
@@ -23,12 +24,13 @@ interface UserData {
 
 interface AuthStore {
     user: UserData | null;
+    token: string | null;
     isLoggedIn: boolean;
     selectedPlan: Plan | null;
 
     // Actions
     register: (newUser: UserData) => Promise<{ success: boolean; message: string }>;
-    login: (username: string, pass: string) => Promise<{ success: boolean; message: string }>;
+    login: (email: string, pass: string) => Promise<{ success: boolean; message: string }>;
     logout: () => void;
     updateProfile: (updatedData: Partial<UserData>) => void;
     setPremium: (status: boolean) => void;
@@ -41,6 +43,7 @@ export const useAuthStore = create<AuthStore>()(
     persist(
         (set, get) => ({
             user: null,
+            token: null,
             isLoggedIn: false,
             selectedPlan: null,
 
@@ -55,14 +58,19 @@ export const useAuthStore = create<AuthStore>()(
             },
 
             // Fungsi Login
-            login: async (username, pass) => {
+            login: async (email, pass) => {
                 try {
-                    const response = await axiosInstance.post('/auth/login', { username, password: pass });
+                    const response = await axiosInstance.post('/auth/login', { email, password: pass });
                     const user = response.data.user;
-                    set({ user, isLoggedIn: true });
+                    const token = response.data.token;
+                    // Simpan token ke localStorage atau set auth header
+                    if (token) {
+                        axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                    }
+                    set({ user, token, isLoggedIn: true });
                     return { success: true, message: "Login Berhasil" };
                 } catch (error: any) {
-                    return { success: false, message: error.response?.data?.message || "Username atau password salah" };
+                    return { success: false, message: error.response?.data?.message || "Email atau password salah" };
                 }
             },
 

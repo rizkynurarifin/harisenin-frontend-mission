@@ -4,8 +4,8 @@ const authService = require('../services/authService');
 
 router.post('/register', async (req, res) => {
     try {
-        const { username, email, password } = req.body;
-        const user = await authService.register(username, email, password);
+        const { fullname, username, email, password } = req.body;
+        const user = await authService.register(fullname, username, email, password);
         res.status(201).json({ message: 'Registrasi berhasil', user });
     } catch (err) {
         res.status(400).json({ message: err.message });
@@ -14,9 +14,9 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
     try {
-        const { username, password } = req.body;
-        const user = await authService.login(username, password);
-        res.status(200).json({ message: 'Login berhasil', user });
+        const { email, password } = req.body;
+        const result = await authService.login(email, password);
+        res.status(200).json({ message: 'Login berhasil', user: result.user, token: result.token });
     } catch (err) {
         res.status(401).json({ message: err.message });
     }

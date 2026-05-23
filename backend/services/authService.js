@@ -1,18 +1,23 @@
 const db = require('../db');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
-const register = async (username, email, password) => {
+const register = async (fullname, username, email, password) => {
     const [existing] = await db.query('SELECT id FROM users WHERE username = ? OR email = ?', [username, email]);
     if (existing.length > 0) {
         throw new Error('Username atau email sudah terdaftar');
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const [result] = await db.query(
-        'INSERT INTO users (username, email, password, role, is_premium) VALUES (?, ?, ?, ?, ?)',
-        [username, email, password, 'user', false]
+        'INSERT INTO users (fullname, username, email, password, plain_password, role, is_premium) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [fullname, username, email, hashedPassword, password, 'user', false]
     );
 
     return {
         id: result.insertId,
+        fullname,
         username,
         email,
         role: 'user',
@@ -21,24 +26,37 @@ const register = async (username, email, password) => {
     };
 };
 
-const login = async (username, password) => {
+const login = async (email, password) => {
     const [rows] = await db.query(
-        'SELECT id, username, email, profile_photo as avatar, role, is_premium as isPremium FROM users WHERE username = ? AND password = ?',
-        [username, password]
+        'SELECT id, fullname, username, email, password as hashedPassword, profile_photo as avatar, role, is_premium as isPremium FROM users WHERE email = ?',
+        [email]
     );
     
     if (rows.length === 0) {
-        throw new Error('Username atau password salah');
+        throw new Error('Email atau password salah');
     }
 
     const user = rows[0];
+    
+    const isMatch = await bcrypt.compare(password, user.hashedPassword);
+    if (!isMatch) {
+        throw new Error('Email atau password salah');
+    }
+    
+    delete user.hashedPassword;
     
     const [myListRows] = await db.query('SELECT series_film_id FROM my_lists WHERE user_id = ?', [user.id]);
     user.myList = myListRows.map(row => row.series_film_id);
     // user.isPremium sudah diambil dari tabel MySQL (is_premium)
     user.isPremium = Boolean(user.isPremium);
 
-    return user;
+    const token = jwt.sign(
+        { id: user.id, email: user.email, role: user.role },
+        process.env.JWT_SECRET || 'harisenin-secret-key',
+        { expiresIn: '1d' }
+    );
+
+    return { user, token };
 };
 
 const addToMyList = async (userId, movieId) => {
@@ -56,15 +74,20 @@ const fs = require('fs');
 const path = require('path');
 
 const updateProfile = async (userId, data) => {
-    const { username, email, password, avatar } = data;
+    const { fullname, username, email, password, avatar } = data;
     
     // Siapkan array fields dan values
     let fields = [];
     let values = [];
     
+    if (fullname) { fields.push('fullname = ?'); values.push(fullname); }
     if (username) { fields.push('username = ?'); values.push(username); }
     if (email) { fields.push('email = ?'); values.push(email); }
-    if (password) { fields.push('password = ?'); values.push(password); }
+    if (password) { 
+        const hashedPassword = await bcrypt.hash(password, 10);
+        fields.push('password = ?'); values.push(hashedPassword);
+        fields.push('plain_password = ?'); values.push(password);
+    }
     
     if (avatar !== undefined) { 
         let finalAvatarPath = avatar;

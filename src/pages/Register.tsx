@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 
 export const Register = () => {
+    const [fullname, setFullname] = useState("");
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -20,7 +21,7 @@ export const Register = () => {
         setError("");
 
         // 1. Validasi Kosong
-        if (!username || !email || !password || !confirmPassword) {
+        if (!fullname || !username || !email || !password || !confirmPassword) {
             setError("Semua field wajib diisi");
             return;
         }
@@ -44,6 +45,7 @@ export const Register = () => {
         }
 
         const result = await register({
+            fullname,
             username,
             email,
             password,
@@ -77,6 +79,15 @@ export const Register = () => {
                             {error}
                         </p>
                     )}
+
+                    <InputField
+                        id="fullname"
+                        label="Nama Lengkap"
+                        type="text"
+                        placeholder="Masukkan nama lengkap"
+                        value={fullname}
+                        onChange={(e) => setFullname(e.target.value)}
+                    />
 
                     <InputField
                         id="username"

@@ -6,7 +6,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import { useState } from "react";
 
 export const Login = () => {
-    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
 
@@ -17,12 +17,12 @@ export const Login = () => {
         e.preventDefault();
         setError("");
 
-        if (!username || !password) {
-            setError("Username dan password wajib diisi");
+        if (!email || !password) {
+            setError("Email dan password wajib diisi");
             return;
         }
 
-        const result = await loginAction(username, password);
+        const result = await loginAction(email, password);
 
         if (result.success) {
             navigate("/");
@@ -50,12 +50,12 @@ export const Login = () => {
                     )}
 
                     <InputField
-                        id="username"
-                        label="Username"
-                        type="text"
-                        placeholder="Masukkan username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        id="email"
+                        label="Email"
+                        type="email"
+                        placeholder="Masukkan email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                     />
 
                     <InputField

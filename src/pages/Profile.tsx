@@ -34,6 +34,7 @@ const Profile = () => {
     }, [user?.myList, movies]);
 
     const [formData, setFormData] = useState({
+        fullname: user?.fullname || "",
         username: user?.username || "",
         email: user?.email || "",
         password: "", 
@@ -57,6 +58,7 @@ const Profile = () => {
             // Hanya kirim password jika pengguna mengisi input (mengubahnya)
             const payload = { 
                 userId: user.id, 
+                fullname: formData.fullname,
                 username: formData.username, 
                 email: formData.email,
                 avatar: formData.avatar,
@@ -70,6 +72,7 @@ const Profile = () => {
             
             // Update auth store (lokal)
             updateProfile({
+                fullname: formData.fullname,
                 username: formData.username,
                 email: formData.email,
                 avatar: newAvatar,
@@ -113,6 +116,13 @@ const Profile = () => {
                         </div>
 
                         <div className="flex flex-col gap-8">
+                            <InputInsetLabel
+                                id="fullname"
+                                label="Nama Lengkap"
+                                value={formData.fullname}
+                                onChange={handleChange}
+                                hasEdit
+                            />
                             <InputInsetLabel
                                 id="username"
                                 label="Nama Pengguna"
