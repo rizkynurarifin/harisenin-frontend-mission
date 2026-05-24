@@ -18,12 +18,14 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const authRoutes = require('./routes/authRoutes');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
 
 // Routes
 // Menggunakan prefix URL tanpa '/api' tambahan untuk match contoh /movies di tabel
 app.use('/', movieRoutes); 
 app.use('/auth', authRoutes); 
 app.use('/plans', subscriptionRoutes);
+app.use('/upload', uploadRoutes);
 
 // Root endpoint test
 app.get('/', (req, res) => {

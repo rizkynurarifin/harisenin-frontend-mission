@@ -2,27 +2,64 @@ const db = require('../db');
 const fs = require('fs');
 const path = require('path');
 
-const saveBase64Image = (base64Str, type, slug) => {
-    if (!base64Str || !base64Str.startsWith('data:image/')) return base64Str; // Jika sudah URL atau kosong
+const processImage = (imageStr, type, slug) => {
+    if (!imageStr) return imageStr;
 
-    const matches = base64Str.match(/^data:image\/([A-Za-z-+\/]+);base64,(.+)$/);
-    if (!matches || matches.length !== 3) return base64Str;
+    // 1. Jika masih format base64
+    if (imageStr.startsWith('data:image/')) {
+        const matches = imageStr.match(/^data:image\/([A-Za-z-+\/]+);base64,(.+)$/);
+        if (!matches || matches.length !== 3) return imageStr;
 
-    const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
-    const buffer = Buffer.from(matches[2], 'base64');
-    
-    // type adalah 'portrait' atau 'landscape'
-    const uploadsDir = path.join(__dirname, '..', 'uploads', 'thumbnail', type);
-    if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
+        const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
+        const buffer = Buffer.from(matches[2], 'base64');
+        
+        const uploadsDir = path.join(__dirname, '..', 'uploads', 'thumbnail', type);
+        if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+        const safeSlug = slug || Date.now().toString();
+        const filename = `${safeSlug}.${ext}`;
+        const filepath = path.join(uploadsDir, filename);
+        
+        fs.writeFileSync(filepath, buffer);
+        return `http://localhost:5000/uploads/thumbnail/${type}/${filename}`;
     }
 
-    const safeSlug = slug || Date.now().toString();
-    const filename = `${safeSlug}.${ext}`;
-    const filepath = path.join(uploadsDir, filename);
-    
-    fs.writeFileSync(filepath, buffer);
-    return `http://localhost:5000/uploads/thumbnail/${type}/${filename}`;
+    // 2. Parse URL if it's absolute
+    let urlPath = imageStr;
+    if (imageStr.startsWith('http')) {
+        try {
+            const urlObj = new URL(imageStr);
+            urlPath = urlObj.pathname;
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    // 3. Move file from /uploads/ temp directory into specific thumbnail folder
+    if (urlPath.startsWith('/uploads/') && !urlPath.includes('/thumbnail/')) {
+        const fileName = urlPath.replace('/uploads/', '');
+        const tempPath = path.join(__dirname, '..', 'uploads', fileName);
+        
+        if (fs.existsSync(tempPath)) {
+            const ext = path.extname(fileName) || '.jpg';
+            const targetDir = path.join(__dirname, '..', 'uploads', 'thumbnail', type);
+            if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+
+            const safeSlug = slug || Date.now().toString();
+            const newFilename = `${safeSlug}${ext}`;
+            const targetPath = path.join(targetDir, newFilename);
+
+            fs.renameSync(tempPath, targetPath);
+            return `http://localhost:5000/uploads/thumbnail/${type}/${newFilename}`;
+        }
+    }
+
+    // If it's a relative /uploads/ path but wasn't moved (e.g. already in thumbnail), make sure it has the host
+    if (imageStr.startsWith('/uploads/')) {
+        return `http://localhost:5000${imageStr}`;
+    }
+
+    return imageStr; // Return as is
 };
 
 // Service SELECT all movies
@@ -176,9 +213,9 @@ const getOrCreateCastAndCrewId = async (name) => {
 const insertMovie = async (movieData) => {
     let { title, slug, type, duration, year, thumbnail, thumbnail_landscape, rating, age_rating, description, trailer_url, is_new_episode, is_premium, is_top_10, genres, casts, creators, total_episodes, last_watched_episode_id, progress, episodes } = movieData;
     
-    // Konversi base64 ke URL statis dengan slug
-    thumbnail = saveBase64Image(thumbnail, 'portrait', slug);
-    thumbnail_landscape = saveBase64Image(thumbnail_landscape, 'landscape', slug);
+    // Proses dan pindahkan gambar ke folder yang sesuai
+    thumbnail = processImage(thumbnail, 'portrait', slug);
+    thumbnail_landscape = processImage(thumbnail_landscape, 'landscape', slug);
 
     const [result] = await db.query(
         `INSERT INTO series_films (title, slug, type, duration, year, thumbnail, thumbnail_landscape, rating, age_rating, description, trailer_url, is_new_episode, is_premium, is_top_10, total_episodes, last_watched_episode_id, progress) 
@@ -217,7 +254,7 @@ const insertMovie = async (movieData) => {
             ep.title || '',
             ep.duration || 0,
             ep.description || '',
-            saveBase64Image(ep.thumbnail, 'episode', `${slug}_ep${ep.episodeNumber || 1}`),
+            processImage(ep.thumbnail, 'episode', `${slug}_ep${ep.episodeNumber || 1}`),
             ep.videoUrl || ep.video_url || '',
             ep.progress || 0
         ]);
@@ -238,12 +275,12 @@ const updateMovie = async (id, movieData) => {
         if (rows.length > 0) finalSlug = rows[0].slug;
     }
 
-    // Konversi base64 ke URL statis jika ada update gambar
+    // Pindahkan gambar dari temp uploads ke folder slug
     if (mainData.thumbnail) {
-        mainData.thumbnail = saveBase64Image(mainData.thumbnail, 'portrait', finalSlug);
+        mainData.thumbnail = processImage(mainData.thumbnail, 'portrait', finalSlug);
     }
     if (mainData.thumbnail_landscape) {
-        mainData.thumbnail_landscape = saveBase64Image(mainData.thumbnail_landscape, 'landscape', finalSlug);
+        mainData.thumbnail_landscape = processImage(mainData.thumbnail_landscape, 'landscape', finalSlug);
     }
 
     const keys = Object.keys(mainData);
@@ -332,7 +369,7 @@ const updateMovie = async (id, movieData) => {
                 ep.title || '',
                 ep.duration || 0,
                 ep.description || '',
-                saveBase64Image(ep.thumbnail, 'episode', `${finalSlug}_ep${ep.episodeNumber || 1}`),
+                processImage(ep.thumbnail, 'episode', `${finalSlug}_ep${ep.episodeNumber || 1}`),
                 ep.videoUrl || ep.video_url || '',
                 ep.progress || 0
             ]);

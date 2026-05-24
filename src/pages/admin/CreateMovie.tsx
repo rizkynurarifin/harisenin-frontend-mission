@@ -90,32 +90,20 @@ export const CreateMovie = () => {
         setFormData((prev) => ({ ...prev, [field]: numValue }));
     };
 
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, field: "thumbnail" | "thumbnailLandscape") => {
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: "thumbnail" | "thumbnailLandscape") => {
         const file = e.target.files?.[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const img = new Image();
-                img.src = reader.result as string;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = field === "thumbnail" ? 300 : 600;
-                    const scaleSize = MAX_WIDTH / img.width;
-                    canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * scaleSize;
-
-                    const ctx = canvas.getContext('2d');
-                    ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
-
-                    setFormData(prev => ({
-                        ...prev,
-                        [field]: compressedBase64
-                    }));
-                };
-            };
-            reader.readAsDataURL(file);
+            try {
+                const { movieService } = await import("../../services/api/movieService");
+                const url = await movieService.uploadFile(file);
+                setFormData(prev => ({
+                    ...prev,
+                    [field]: url
+                }));
+            } catch (error) {
+                console.error("Upload error", error);
+                alert("Gagal mengupload gambar");
+            }
         }
     };
 
@@ -439,28 +427,22 @@ export const CreateMovie = () => {
                                                     label="Thumbnail Episode"
                                                     value={episode.thumbnail || ""}
                                                     aspectRatio="aspect-video"
-                                                    onChange={(e) => {
+                                                    onChange={async (e) => {
                                                         const file = e.target.files?.[0];
                                                         if (file) {
-                                                            const reader = new FileReader();
-                                                            reader.onloadend = () => {
-                                                                const img = new Image();
-                                                                img.src = reader.result as string;
-                                                                img.onload = () => {
-                                                                    const canvas = document.createElement('canvas');
-                                                                    const scaleSize = 400 / img.width;
-                                                                    canvas.width = 400;
-                                                                    canvas.height = img.height * scaleSize;
-                                                                    const ctx = canvas.getContext('2d');
-                                                                    ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
-                                                                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
-                                                                    
-                                                                    const newEpisodes = [...formData.episodes];
-                                                                    newEpisodes[index].thumbnail = compressedBase64;
-                                                                    setFormData({ ...formData, episodes: newEpisodes });
-                                                                };
-                                                            };
-                                                            reader.readAsDataURL(file);
+                                                            try {
+                                                                const { movieService } = await import("../../services/api/movieService");
+                                                                const url = await movieService.uploadFile(file);
+                                                                setFormData(prev => {
+                                                                    if (!prev) return prev;
+                                                                    const newEpisodes = [...prev.episodes];
+                                                                    newEpisodes[index].thumbnail = url;
+                                                                    return { ...prev, episodes: newEpisodes };
+                                                                });
+                                                            } catch (error) {
+                                                                console.error("Upload error", error);
+                                                                alert("Gagal mengupload thumbnail episode");
+                                                            }
                                                         }
                                                     }}
                                                 />

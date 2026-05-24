@@ -59,4 +59,21 @@ router.put('/profile', async (req, res) => {
     }
 });
 
+router.get('/verify-email', async (req, res) => {
+    try {
+        const { token } = req.query;
+        if (!token) {
+            return res.status(400).json({ message: 'Token tidak disertakan' });
+        }
+        await authService.verifyEmail(token);
+        res.status(200).json({ message: 'Email Verified Successfully' });
+    } catch (err) {
+        if (err.message === 'Invalid Verification Token') {
+            res.status(400).json({ message: err.message });
+        } else {
+            res.status(500).json({ message: err.message });
+        }
+    }
+});
+
 module.exports = router;

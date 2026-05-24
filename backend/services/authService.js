@@ -1,6 +1,8 @@
 const db = require('../db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
+const emailService = require('./emailService');
 
 const register = async (fullname, username, email, password) => {
     const [existing] = await db.query('SELECT id FROM users WHERE username = ? OR email = ?', [username, email]);
@@ -9,11 +11,17 @@ const register = async (fullname, username, email, password) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const verificationToken = uuidv4();
 
     const [result] = await db.query(
-        'INSERT INTO users (fullname, username, email, password, plain_password, role, is_premium) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [fullname, username, email, hashedPassword, password, 'user', false]
+        'INSERT INTO users (fullname, username, email, password, plain_password, role, is_premium, verification_token, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [fullname, username, email, hashedPassword, password, 'user', false, verificationToken, false]
     );
+
+    // Kirim email verifikasi (berjalan di background tanpa menghalangi response)
+    emailService.sendVerificationEmail(email, verificationToken).catch(err => {
+        console.error("Error sending verification email:", err);
+    });
 
     return {
         id: result.insertId,
@@ -22,13 +30,14 @@ const register = async (fullname, username, email, password) => {
         email,
         role: 'user',
         isPremium: false,
-        myList: []
+        myList: [],
+        isVerified: false
     };
 };
 
 const login = async (email, password) => {
     const [rows] = await db.query(
-        'SELECT id, fullname, username, email, password as hashedPassword, profile_photo as avatar, role, is_premium as isPremium FROM users WHERE email = ?',
+        'SELECT id, fullname, username, email, password as hashedPassword, profile_photo as avatar, role, is_premium as isPremium, is_verified FROM users WHERE email = ?',
         [email]
     );
     
@@ -37,6 +46,10 @@ const login = async (email, password) => {
     }
 
     const user = rows[0];
+
+    if (!user.is_verified) {
+        throw new Error('Akun Anda belum diverifikasi. Silakan cek email untuk melakukan verifikasi.');
+    }
     
     const isMatch = await bcrypt.compare(password, user.hashedPassword);
     if (!isMatch) {
@@ -129,10 +142,30 @@ const updateProfile = async (userId, data) => {
     return data.avatar !== undefined ? values[fields.indexOf('profile_photo = ?')] : undefined;
 };
 
+const verifyEmail = async (token) => {
+    // Cari user dengan token tersebut
+    const [rows] = await db.query('SELECT id, is_verified FROM users WHERE verification_token = ?', [token]);
+    
+    if (rows.length === 0) {
+        throw new Error('Invalid Verification Token');
+    }
+
+    const user = rows[0];
+    if (user.is_verified) {
+        throw new Error('Email sudah diverifikasi sebelumnya');
+    }
+
+    // Update is_verified menjadi true dan bisa opsional menghapus tokennya
+    await db.query('UPDATE users SET is_verified = TRUE, verification_token = NULL WHERE id = ?', [user.id]);
+    
+    return true;
+};
+
 module.exports = {
     register,
     login,
     addToMyList,
     removeFromMyList,
-    updateProfile
+    updateProfile,
+    verifyEmail
 };

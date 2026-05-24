@@ -7,13 +7,22 @@ interface FileUploadProps {
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export const FileUpload = ({ label, value, aspectRatio, onChange }: FileUploadProps) => (
-    <div className="space-y-3">
-        <FormLabel>{label}</FormLabel>
-        <div className={`relative group ${aspectRatio} sm:h-64 w-full bg-white/5 border border-dashed border-white/20 rounded-xl flex flex-col items-center justify-center overflow-hidden hover:border-blue-500 transition-all`}>
-            {value ? (
-                <img src={value} className="w-full h-full object-cover" alt="Preview" />
-            ) : (
+export const FileUpload = ({ label, value, aspectRatio, onChange }: FileUploadProps) => {
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    
+    const getImgSrc = () => {
+        if (!value) return "";
+        if (value.startsWith('http') || value.startsWith('data:image')) return value;
+        return `${baseUrl}${value.startsWith('/') ? '' : '/'}${value}`;
+    };
+
+    return (
+        <div className="space-y-3">
+            <FormLabel>{label}</FormLabel>
+            <div className={`relative group ${aspectRatio} sm:h-64 w-full bg-white/5 border border-dashed border-white/20 rounded-xl flex flex-col items-center justify-center overflow-hidden hover:border-blue-500 transition-all`}>
+                {value ? (
+                    <img src={getImgSrc()} className="w-full h-full object-cover" alt="Preview" />
+                ) : (
                 <div className="text-center p-4">
                     <svg className="mx-auto h-8 w-8 text-secondary/50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -24,4 +33,5 @@ export const FileUpload = ({ label, value, aspectRatio, onChange }: FileUploadPr
             <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={onChange} />
         </div>
     </div>
-);
+    );
+};
