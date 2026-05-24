@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/atoms/Button";
 import { genreList } from "../../const/genre";
-import type { EpisodeDetail, Movie, MovieType, SeriesType } from "../../const/movies";
+import type { EpisodeDetail, Movie } from "../../const/movies";
 import { FormField } from "../../components/molecules/FormField";
 import { FileUpload } from "../../components/molecules/FileUpload";
 import { FormLabel } from "../../components/atoms/FormLabel";
@@ -148,7 +148,7 @@ export const CreateMovie = () => {
                 ...baseData,
                 type: "movie",
                 duration: formData.duration,
-            } as MovieType;
+            } as unknown as Omit<Movie, 'id'>;
         } else {
             const optimizedEpisodes = formData.episodes.map((ep, index) => {
                 const sequence = (index + 1).toString().padStart(2, '0');
@@ -168,7 +168,7 @@ export const CreateMovie = () => {
                 totalEpisodes: formData.totalEpisodes,
                 episodes: optimizedEpisodes,
                 lastWatchedEpisodeId: optimizedEpisodes[0]?.id || 1,
-            } as SeriesType;
+            } as unknown as Omit<Movie, 'id'>;
         }
 
         try {

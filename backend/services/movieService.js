@@ -26,8 +26,40 @@ const saveBase64Image = (base64Str, type, slug) => {
 };
 
 // Service SELECT all movies
-const getAllMovies = async () => {
-    const [movies] = await db.query('SELECT * FROM series_films');
+const getAllMovies = async (filter, sort, search) => {
+    let query = 'SELECT * FROM series_films';
+    let conditions = [];
+    let params = [];
+
+    // Kriteria Penyaringan (Filter)
+    if (filter) {
+        conditions.push('type = ?');
+        params.push(filter);
+    }
+
+    // Kriteria Pencarian (Search)
+    if (search) {
+        conditions.push('title LIKE ?');
+        params.push(`%${search}%`);
+    }
+
+    if (conditions.length > 0) {
+        query += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    // Kriteria Pengurutan (Sort)
+    if (sort) {
+        // Asumsi format sort = 'field' atau 'field:desc'
+        const validSortFields = ['id', 'title', 'year', 'rating', 'duration'];
+        const [sortField, sortOrderStr] = sort.split(':');
+        const sortOrder = sortOrderStr && sortOrderStr.toLowerCase() === 'desc' ? 'DESC' : 'ASC';
+        
+        if (validSortFields.includes(sortField)) {
+            query += ` ORDER BY ${sortField} ${sortOrder}`;
+        }
+    }
+
+    const [movies] = await db.query(query, params);
     
     const [allGenres] = await db.query(`
         SELECT sfg.series_film_id, g.name 

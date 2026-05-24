@@ -17,6 +17,7 @@ import CreateMovie from './pages/admin/CreateMovie';
 import EditMovie from './pages/admin/EditMovie';
 import { NotFound } from './pages/NotFound';
 import { ServerError } from './pages/ServerError';
+import Search from './pages/Search';
 
 const router = createBrowserRouter([
     { path: "login", element: <Login /> },
@@ -39,6 +40,7 @@ const router = createBrowserRouter([
                     { path: "profile", element: <Profile /> },
                     { path: "payment", element: <Payment /> },
                     { path: "payment-detail/:orderId", element: <PaymentDetail /> },
+                    { path: "search", element: <Search /> },
                 ]
             },
 

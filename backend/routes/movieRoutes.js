@@ -3,13 +3,11 @@ const router = express.Router();
 const movieService = require('../services/movieService');
 const authMiddleware = require('../middlewares/authMiddleware');
 
-// Terapkan middleware ke semua endpoint movies
-router.use(authMiddleware.verifyToken);
-
 // GET /movies - List semua movies
-router.get('/movies', async (req, res) => {
+router.get('/movies', authMiddleware.verifyToken, async (req, res) => {
     try {
-        const movies = await movieService.getAllMovies();
+        const { filter, sort, search } = req.query;
+        const movies = await movieService.getAllMovies(filter, sort, search);
         res.status(200).json({ success: true, data: movies });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -17,7 +15,7 @@ router.get('/movies', async (req, res) => {
 });
 
 // GET /movie/:id - Menampilkan satu movie berdasarkan id
-router.get('/movie/:id', async (req, res) => {
+router.get('/movie/:id', authMiddleware.verifyToken, async (req, res) => {
     try {
         const id = req.params.id;
         const movie = await movieService.getMovieById(id);
@@ -33,7 +31,7 @@ router.get('/movie/:id', async (req, res) => {
 });
 
 // POST /movie - Menambahkan data movie
-router.post('/movie', async (req, res) => {
+router.post('/movie', authMiddleware.verifyToken, async (req, res) => {
     try {
         const movieData = req.body;
         const newMovie = await movieService.insertMovie(movieData);
@@ -44,7 +42,7 @@ router.post('/movie', async (req, res) => {
 });
 
 // PUT/PATCH /movie/:id - Mengubah data berdasarkan id
-router.patch('/movie/:id', async (req, res) => {
+router.patch('/movie/:id', authMiddleware.verifyToken, async (req, res) => {
     try {
         const id = req.params.id;
         const movieData = req.body;
@@ -62,7 +60,7 @@ router.patch('/movie/:id', async (req, res) => {
 });
 
 // DELETE /movie/:id - Menghapus data berdasarkan id
-router.delete('/movie/:id', async (req, res) => {
+router.delete('/movie/:id', authMiddleware.verifyToken, async (req, res) => {
     try {
         const id = req.params.id;
         const affectedRows = await movieService.deleteMovie(id);

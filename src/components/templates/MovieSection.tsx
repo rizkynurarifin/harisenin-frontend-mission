@@ -9,6 +9,7 @@ interface MovieSectionProps {
     variant?: "landscape" | "portrait";
     className?: string;
     isGrid?: boolean;
+    rightNode?: React.ReactNode;
 }
 
 export const MovieSection = ({
@@ -17,6 +18,7 @@ export const MovieSection = ({
     variant = "portrait",
     className = "",
     isGrid = false,
+    rightNode,
 }: MovieSectionProps) => {
     const carouselGap =
         variant === "landscape"
@@ -27,9 +29,12 @@ export const MovieSection = ({
         <section
             className={`text-white w-full flex flex-col items-start p-5 md:py-5 lg:py-10 md:px-10 lg:px-20 relative z-0 hover:z-50 transition-all duration-300 ${className}`}
         >
-            <h3 className="text-xl lg:text-[32px] font-bold mb-5 lg:mb-8 w-full">
-                {title}
-            </h3>
+            <div className="flex flex-col md:flex-row md:items-center justify-between w-full mb-5 lg:mb-8 gap-4">
+                <h3 className="text-xl lg:text-[32px] font-bold">
+                    {title}
+                </h3>
+                {rightNode && <div>{rightNode}</div>}
+            </div>
 
             {movies.length === 0 ? (
                 <div className="w-full py-16 flex flex-col items-center justify-center border border-dashed border-gray-700 rounded-2xl bg-gray-900/20 px-4">

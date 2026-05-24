@@ -184,10 +184,10 @@ export const EditMovie = () => {
         if (formData.type === "movie") {
             payload = {
                 ...baseData,
-                id: numericId,
+                id: numericId || 0,
                 type: "movie",
                 duration: formData.duration,
-            } as MovieType;
+            } as unknown as Movie;
         } else {
             const optimizedEpisodes = formData.episodes.map((ep, index) => {
                 const sequence = (index + 1).toString().padStart(2, '0');
@@ -202,12 +202,12 @@ export const EditMovie = () => {
 
             payload = {
                 ...baseData,
-                id: numericId,
+                id: numericId || 0,
                 type: "series",
                 totalEpisodes: formData.totalEpisodes,
                 episodes: optimizedEpisodes,
                 lastWatchedEpisodeId: (movieToEdit as SeriesType).lastWatchedEpisodeId || optimizedEpisodes[0]?.id || 1,
-            } as SeriesType;
+            } as unknown as Movie;
         }
 
         try {
