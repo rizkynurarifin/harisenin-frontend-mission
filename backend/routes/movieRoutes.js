@@ -4,7 +4,7 @@ const movieService = require('../services/movieService');
 const authMiddleware = require('../middlewares/authMiddleware');
 
 // GET /movies - List semua movies
-router.get('/movies', authMiddleware.verifyToken, async (req, res) => {
+router.get('/movies', async (req, res) => {
     try {
         const { filter, sort, search } = req.query;
         const movies = await movieService.getAllMovies(filter, sort, search);
