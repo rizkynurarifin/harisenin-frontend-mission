@@ -51,7 +51,7 @@ export const ChoosePaymentSection = () => {
             setIsLoading(true);
             const response = await axiosInstance.post('/plans/order', {
                 userId: user?.id,
-                planId: selectedPlan.id,
+                planId: (selectedPlan as any).id,
                 paymentMethod: selectedPayment,
                 voucherCode: voucherCode || null
             });

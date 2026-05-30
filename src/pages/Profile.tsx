@@ -42,7 +42,7 @@ const Profile = () => {
         isPremium: user?.isPremium || false
     });
 
-    const [isSaving, setIsSaving] = useState(false);
+    // isSaving unused
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;

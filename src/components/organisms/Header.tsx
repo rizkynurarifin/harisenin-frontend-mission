@@ -1,4 +1,4 @@
-import { useState, FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { IoChevronUp, IoSearch } from "react-icons/io5";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
