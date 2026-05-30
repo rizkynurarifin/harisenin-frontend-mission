@@ -30,7 +30,7 @@ const sendVerificationEmail = async (toEmail, token) => {
 
     try {
         let info = await transporter.sendMail({
-            from: `"Harisenin Movie App 🎬" <${process.env.EMAIL_USER}>`,
+            from: `"Chillix Movie App 🎬" <${process.env.EMAIL_USER}>`,
             to: toEmail,
             subject: "Verifikasi Akun Email Anda",
             text: `Halo, terima kasih telah mendaftar!\n\nKlik link berikut untuk verifikasi email Anda: ${verifyLink}\n\nAbaikan email ini jika Anda tidak merasa mendaftar.`,
