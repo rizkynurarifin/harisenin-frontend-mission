@@ -1,7 +1,7 @@
 const db = require('../db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 const emailService = require('./emailService');
 
 const register = async (fullname, username, email, password) => {
@@ -11,7 +11,7 @@ const register = async (fullname, username, email, password) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const verificationToken = uuidv4();
+    const verificationToken = crypto.randomUUID();
 
     const [result] = await db.query(
         'INSERT INTO users (fullname, username, email, password, plain_password, role, is_premium, verification_token, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
