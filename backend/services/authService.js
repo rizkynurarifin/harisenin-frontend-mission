@@ -18,10 +18,13 @@ const register = async (fullname, username, email, password) => {
         [fullname, username, email, hashedPassword, password, 'user', false, verificationToken, false]
     );
 
-    // Kirim email verifikasi (berjalan di background tanpa menghalangi response)
-    emailService.sendVerificationEmail(email, verificationToken).catch(err => {
+    // Kirim email verifikasi (di Vercel Serverless, kita WAJIB menggunakan await 
+    // agar proses tidak di-freeze (dihentikan) saat response dikirim)
+    try {
+        await emailService.sendVerificationEmail(email, verificationToken);
+    } catch (err) {
         console.error("Error sending verification email:", err);
-    });
+    }
 
     return {
         id: result.insertId,
