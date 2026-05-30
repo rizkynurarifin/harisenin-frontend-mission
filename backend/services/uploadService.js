@@ -2,9 +2,11 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Pastikan folder uploads tersedia
-const uploadsDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadsDir)) {
+// Gunakan /tmp di Vercel (karena filesystem Vercel read-only), atau folder lokal
+const isVercel = process.env.NODE_ENV === 'production' || process.env.VERCEL;
+const uploadsDir = isVercel ? '/tmp' : path.join(__dirname, '../uploads');
+
+if (!isVercel && !fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
