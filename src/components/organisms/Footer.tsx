@@ -1,4 +1,5 @@
 import { useState } from "react";
+import logoUrl from "../../assets/logo.png";
 import { MdKeyboardArrowDown, MdKeyboardArrowRight } from "react-icons/md";
 import { genreList } from "../../const/genre";
 import { Link } from "react-router-dom";
@@ -14,7 +15,7 @@ export const Footer = () => {
             <div className='flex flex-col gap-5 md:gap-6 mb-10'>
                 <Link to='/' className='flex items-center gap-2 text-white'>
                     <img
-                        src='src\assets\logo.png'
+                        src={logoUrl}
                         className='w-21 md:w-25.75'
                         alt='chill logo'
                     />
