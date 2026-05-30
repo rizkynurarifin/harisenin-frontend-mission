@@ -1,4 +1,5 @@
 import { Button } from "../atoms/Button";
+import defaultProfileUrl from "../../assets/profile.png";
 
 interface ProfileHeaderProps {
     avatar: string;
@@ -24,7 +25,7 @@ export const ProfileHeader = ({ avatar, onAvatarChange }: ProfileHeaderProps) =>
 
     // Helper untuk memformat URL gambar agar bisa menangkap URL dari Backend
     const getAvatarSrc = () => {
-        if (!avatar) return (await import("../../assets/profile.png")).default;
+        if (!avatar) return defaultProfileUrl;
         if (avatar.startsWith('http') || avatar.startsWith('data:image')) return avatar;
         // Gunakan VITE_API_URL, default ke localhost:5000 jika tidak diset
         const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
