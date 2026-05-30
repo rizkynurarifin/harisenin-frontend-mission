@@ -27,6 +27,7 @@ export const ProfileHeader = ({ avatar, onAvatarChange }: ProfileHeaderProps) =>
     const getAvatarSrc = () => {
         if (!avatar) return defaultProfileUrl;
         if (avatar.startsWith('http') || avatar.startsWith('data:image')) return avatar;
+        if (avatar.startsWith('/uploads')) return avatar; // Serve natively from public/uploads
         // Gunakan VITE_API_URL, default ke localhost:5000 jika tidak diset
         const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
         return `${baseUrl}${avatar.startsWith('/') ? '' : '/'}${avatar}`;
