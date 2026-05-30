@@ -4,6 +4,8 @@ import { InputField } from "../components/atoms/InputField";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import { useState } from "react";
+import bgLoginUrl from "../assets/bg-login.png";
+import logoUrl from "../assets/logo.png";
 
 export const Login = () => {
     const [email, setEmail] = useState("");
@@ -32,10 +34,10 @@ export const Login = () => {
     };
 
     return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-[url('src/assets/bg-login.png')] bg-cover bg-center">
+        <div className="min-h-screen w-full flex items-center justify-center bg-cover bg-center" style={{ backgroundImage: `url(${bgLoginUrl})` }}>
             <main className="w-full max-w-76.5 lg:max-w-132.25 bg-[#181A1C]/80 rounded-lg lg:rounded-2xl p-6 lg:p-10 flex flex-col items-center">
 
-                <img src="src\assets\logo.png" alt="Chill Logo" className="w-20 lg:w-40.75 mb-5 lg:mb-9.25" />
+                <img src={logoUrl} alt="Chill Logo" className="w-20 lg:w-40.75 mb-5 lg:mb-9.25" />
 
                 <div className="text-center mb-5 lg:mb-9.25">
                     <h1 className="text-white text-lg lg:text-[32px] font-bold mb-1 lg:mb-2">Masuk</h1>

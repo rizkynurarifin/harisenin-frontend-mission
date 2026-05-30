@@ -8,6 +8,8 @@ import { navLinks, profileLinks } from "../../const/navigation";
 import { Button } from "../atoms/Button";
 import { useAuthStore } from "../../store/useAuthStore";
 import { IoMdSettings } from "react-icons/io";
+import logoUrl from "../../assets/logo.png";
+import defaultProfileUrl from "../../assets/profile.png";
 
 interface HeaderProps {
     withGenre?: boolean;
@@ -21,7 +23,7 @@ export const Header = ({ withGenre }: HeaderProps) => {
 
     const getAvatarSrc = () => {
         const avatar = user?.avatar;
-        if (!avatar) return "/src/assets/profile.png";
+        if (!avatar) return defaultProfileUrl;
         if (avatar.startsWith('http') || avatar.startsWith('data:image')) return avatar;
         const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
         return `${baseUrl}${avatar.startsWith('/') ? '' : '/'}${avatar}`;
@@ -40,7 +42,7 @@ export const Header = ({ withGenre }: HeaderProps) => {
             <div className='flex gap-3 lg:gap-20 items-center'>
                 <Link to='/' className='flex items-center gap-2 text-white'>
                     <img
-                        src='/src/assets/logo.png'
+                        src={logoUrl}
                         className='w-25.75 hidden md:inline'
                         alt='chill logo'
                     />

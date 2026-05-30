@@ -4,6 +4,8 @@ import { InputField } from "../components/atoms/InputField";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
+import bgRegisterUrl from "../assets/bg-register.png";
+import logoUrl from "../assets/logo.png";
 
 export const Register = () => {
     const [fullname, setFullname] = useState("");
@@ -63,10 +65,10 @@ export const Register = () => {
     };
 
     return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-[url('src/assets/bg-register.png')] bg-cover bg-center">
+        <div className="min-h-screen w-full flex items-center justify-center bg-cover bg-center" style={{ backgroundImage: `url(${bgRegisterUrl})` }}>
             <main className="w-full max-w-76.5 lg:max-w-132.25 bg-[#181A1C]/80 rounded-lg lg:rounded-2xl p-6 lg:p-10 flex flex-col items-center">
 
-                <img src="src/assets/logo.png" alt="Chill Logo" className="w-20 lg:w-40.75 mb-5 lg:mb-9.25" />
+                <img src={logoUrl} alt="Chill Logo" className="w-20 lg:w-40.75 mb-5 lg:mb-9.25" />
 
                 <div className="text-center mb-5 lg:mb-9.25">
                     <h1 className="text-white text-lg lg:text-[32px] font-bold mb-1 lg:mb-2">Daftar</h1>
